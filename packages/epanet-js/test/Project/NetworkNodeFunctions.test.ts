@@ -17,6 +17,11 @@ const tankTestInp = readFileSync(
   "utf8",
 );
 
+const mixedUnitsInp = readFileSync(
+  join(__dirname, "../data/mixed-units.inp"),
+  "utf8",
+);
+
 const ws = new Workspace();
 await ws.loadModule();
 
@@ -178,6 +183,20 @@ describe("Network Node Functions", () => {
       expect(maxLevel).toEqual(5);
       expect(tankDiam).toEqual(3.2);
       expect(minVolume).toEqual(1);
+    });
+
+    test("should set and get junction values in mixed units", () => {
+      ws.writeFile("net1.inp", mixedUnitsInp);
+      model.open("net1.inp", "report.rpt", "out.bin");
+
+      model.solveH();
+
+      const junctionIndex = model.getNodeIndex("J1");
+      const pressure = model.getNodeValue(junctionIndex, NodeProperty.Pressure);
+      expect(pressure).toBeCloseTo(63.12, 2); // 63.12 psi
+
+      const demand = model.getNodeValue(junctionIndex, NodeProperty.BaseDemand);
+      expect(demand).toBeCloseTo(0.19, 2); // 0.19 lps
     });
 
     test("should set and get junction data", () => {

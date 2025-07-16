@@ -1,6 +1,6 @@
 {
   "name": "@model-create/epanet-engine",
-  "version": "0.8.0-alpha.7",
+  "version": "0.8.0-alpha.8",
   "type": "module",
   "description": "EPANET WASM engine",
   "main": "dist/index.cjs", 
