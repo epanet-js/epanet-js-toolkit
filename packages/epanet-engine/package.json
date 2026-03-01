@@ -1,15 +1,14 @@
 {
   "name": "@model-create/epanet-engine",
-  "version": "0.8.0-alpha.8",
+  "version": "0.8.0-alpha.9",
   "type": "module",
   "description": "EPANET WASM engine",
-  "main": "dist/index.cjs", 
-  "module": "dist/index.js", 
+  "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",  
-      "require": "./dist/index.cjs" 
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {

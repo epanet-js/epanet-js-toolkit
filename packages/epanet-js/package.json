@@ -1,9 +1,9 @@
 {
   "name": "epanet-js",
-  "version": "0.8.0-alpha.8",
+  "version": "0.8.0-alpha.9",
   "license": "MIT",
   "type": "module",
-  "main": "dist/index.cjs",
+  "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -12,7 +12,6 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
       "types": "./dist/src/index.d.ts"
     }
   },

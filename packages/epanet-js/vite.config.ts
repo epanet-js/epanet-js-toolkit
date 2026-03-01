@@ -6,8 +6,7 @@ export default defineConfig({
     lib: {
       entry: "src/index.ts",
       name: "EpanetJs",
-      formats: ["es", "cjs"],
-      fileName: (format) => `index.${format === "es" ? "mjs" : "cjs"}`,
+      formats: ["es"],
     },
     rollupOptions: {
       external: ["@model-create/epanet-engine"],
