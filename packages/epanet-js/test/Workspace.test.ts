@@ -4,7 +4,7 @@ import { Workspace } from "../src";
 const workspace = new Workspace();
 test("Returns workspace version", async () => {
   await workspace.loadModule();
-  expect(workspace.version).toBe(20200);
+  expect(workspace.version).toBe(20305);
 });
 
 test("Returns an error", () => {

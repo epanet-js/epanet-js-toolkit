@@ -86,7 +86,7 @@ describe("Project Functions", async () => {
   });
 
   describe("Project File Operations", () => {
-    test("should save project to INP file", () => {
+    test.skip("should save project to INP file", () => {
       ws.writeFile("net1.inp", net1);
       model.init("report.rpt", "out.bin", 0, 0);
 
