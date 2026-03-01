@@ -41,7 +41,9 @@ import fs from "fs";
 const net1 = fs.readFileSync("net1.inp");
 
 // Initialise a new Workspace and Project object
+// Requires top-level await support or execution within an async function
 const ws = new Workspace();
+await ws.loadModule(); // Asynchronous
 const model = new Project(ws);
 
 // Write a copy of the inp file to the virtual workspace
@@ -195,7 +197,9 @@ Create a `Project` object by instancing the <a href="https://epanetjs.com/api/pr
 ```javascript
 import { Project, Workspace } from `epanet-js`
 
-const ws = new Workspace()
+// Requires top-level await support or execution within an async function
+const ws = new Workspace;
+await ws.loadModule(); // Asynchronous
 const model = new Project(ws)
 ```
 

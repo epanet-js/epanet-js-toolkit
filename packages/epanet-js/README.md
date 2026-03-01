@@ -34,7 +34,9 @@ import fs from "fs";
 const net1 = fs.readFileSync("net1.inp");
 
 // Initialise a new Workspace and Project object
+// Requires top-level await support or execution within an async function
 const ws = new Workspace();
+await ws.loadModule(); // Asynchronous
 const model = new Project(ws);
 
 // Write a copy of the inp file to the workspace
