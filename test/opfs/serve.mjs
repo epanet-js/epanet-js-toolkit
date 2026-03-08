@@ -33,7 +33,9 @@ const MIME_TYPES = {
 };
 
 function getMime(filePath) {
-  return MIME_TYPES[extname(filePath).toLowerCase()] || "application/octet-stream";
+  return (
+    MIME_TYPES[extname(filePath).toLowerCase()] || "application/octet-stream"
+  );
 }
 
 const server = createServer(async (req, res) => {

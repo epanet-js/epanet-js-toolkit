@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -26,8 +26,14 @@
 
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
-          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
         background: linear-gradient(180deg, #020617 0%, #111827 100%);
         color: var(--text);
         min-height: 100vh;
@@ -85,7 +91,10 @@
         border-radius: 16px;
         padding: 28px;
         text-align: center;
-        transition: border-color 120ms, background 120ms, transform 120ms;
+        transition:
+          border-color 120ms,
+          background 120ms,
+          transform 120ms;
         background: rgba(14, 165, 233, 0.06);
       }
 
@@ -247,23 +256,17 @@
               <option value="pthreads">
                 Local — Pthreads (WasmFS + OPFS at C level)
               </option>
-              <option value="published">Published epanet-js@0.8.0 (baseline)</option>
+              <option value="published">
+                Published epanet-js@0.8.0 (baseline)
+              </option>
             </select>
           </div>
           <div class="field">
             <label for="iterations">Iterations</label>
-            <input
-              id="iterations"
-              type="number"
-              min="1"
-              max="100"
-              value="1"
-            />
+            <input id="iterations" type="number" min="1" max="100" value="1" />
           </div>
           <div class="field">
-            <label for="sample-ms"
-              >Main-thread heap sample interval (ms)</label
-            >
+            <label for="sample-ms">Main-thread heap sample interval (ms)</label>
             <input
               id="sample-ms"
               type="number"
@@ -327,9 +330,9 @@
           <p class="hint">
             Open Chrome DevTools → <strong>Memory</strong> tab. Take a heap
             snapshot before and after each run. The
-            <strong>pthreads + OPFS</strong> build should show significantly less
-            WASM heap growth for large networks because output files are backed
-            by the on-disk OPFS rather than RAM.
+            <strong>pthreads + OPFS</strong> build should show significantly
+            less WASM heap growth for large networks because output files are
+            backed by the on-disk OPFS rather than RAM.
           </p>
           <p class="hint">
             The <strong>Peak Main Heap</strong> stat uses
@@ -518,9 +521,7 @@
             appendLog(
               `SharedArrayBuffer: ${payload.hasSharedArrayBuffer ? "yes ✓" : "no ✗"}`,
             );
-            appendLog(
-              `OPFS API: ${payload.hasOpfsApi ? "yes ✓" : "no ✗"}`,
-            );
+            appendLog(`OPFS API: ${payload.hasOpfsApi ? "yes ✓" : "no ✗"}`);
             appendLog(`Sources:`);
             appendLog(`  standard: ${payload.sources.standard}`);
             appendLog(`  pthreads: ${payload.sources.pthreads}`);
@@ -550,7 +551,8 @@
             dom.statTotal.textContent = fmtMs(payload.totalDurationMs);
             dom.statAvg.textContent = fmtMs(payload.averageDurationMs);
             dom.statOutput.textContent = fmtBytes(payload.outputBytes);
-            dom.statStorage.textContent = payload.opfsMode ?? payload.storage?.mode ?? "—";
+            dom.statStorage.textContent =
+              payload.opfsMode ?? payload.storage?.mode ?? "—";
 
             if (!("memory" in performance)) {
               dom.statHeap.textContent = "N/A";
