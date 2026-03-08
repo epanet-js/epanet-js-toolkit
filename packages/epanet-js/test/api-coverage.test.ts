@@ -90,7 +90,7 @@ describe("EPANET WASM Function Coverage and Project API", () => {
   });
 
   it("should have definitions for all available relevant WASM functions", () => {
-    const definedWasmFunctions = new Set<keyof EpanetProject>(
+    const definedWasmFunctions = new Set<string>(
       Object.values(apiDefinitions).map((def) => def.wasmFunctionName),
     );
 

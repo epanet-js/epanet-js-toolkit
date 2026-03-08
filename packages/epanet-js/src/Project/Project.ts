@@ -708,7 +708,9 @@ class Project {
       }
       // --- End Runtime Version Check ---
 
-      const wasmFunction = EN[wasmFunctionName] as Function | undefined;
+      const wasmFunction = EN[wasmFunctionName as keyof EpanetModule] as
+        | Function
+        | undefined;
 
       if (typeof wasmFunction !== "function") {
         throw new Error(

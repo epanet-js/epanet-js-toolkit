@@ -39,7 +39,7 @@ export interface OutputArgDef {
 // Define the structure for API function metadata
 export interface ApiFunctionDefinition {
   /** The exact name exported by WASM (e.g., '_EN_getnodeindex') */
-  wasmFunctionName: keyof EpanetModule; // Allow string for flexibility
+  wasmFunctionName: keyof EpanetModule | string;
 
   /** Describes the INPUT arguments the JS function receives (excluding project handle) */
   inputArgDefs: InputArgDef[];
