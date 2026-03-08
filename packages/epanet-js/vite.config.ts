@@ -10,7 +10,10 @@ export default defineConfig({
       fileName: (format) => `index.${format === "es" ? "mjs" : "cjs"}`,
     },
     rollupOptions: {
-      external: ["@model-create/epanet-engine"],
+      external: [
+        "@model-create/epanet-engine",
+        "@model-create/epanet-engine/pthreads",
+      ],
     },
   },
   plugins: [dts()],

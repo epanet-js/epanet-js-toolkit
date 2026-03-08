@@ -10,6 +10,9 @@
     ".": {
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./pthreads": {
+      "import": "./dist/pthreads/epanet.js"
     }
   },
   "scripts": {
@@ -17,6 +20,7 @@
     "build:dockerimage-arm64": "docker build --build-arg EMSDK_TAG_SUFFIX='-arm64' -t epanet-js-engine .",
     "build:dockerimage-noCache": "docker build --no-cache --build-arg EMSDK_TAG_SUFFIX='-arm64' -t epanet-js-engine .",
     "build:emscripten": "docker run --rm -v \"$(pwd):/src\" epanet-js-engine ./build.sh",
+    "build:emscripten-pthreads": "docker run --rm -v \"$(pwd):/src\" epanet-js-engine ./build_pthreads.sh",
     "build:types": "node type-gen/create-types.js",
     "build": "npm run build:dockerimage && npm run build:emscripten && npm run build:types",
     "build:arm64": "npm run build:dockerimage-arm64 && npm run build:emscripten && npm run build:types",

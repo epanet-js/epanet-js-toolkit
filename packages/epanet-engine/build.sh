@@ -87,5 +87,14 @@ echo "============================================="
 
 )
 echo "============================================="
-echo "Compiling wasm bindings done"
+echo "Compiling standard wasm bindings done"
+echo "============================================="
+
+echo ""
+echo "============================================="
+echo "Building pthreads + WasmFS + OPFS variant..."
+echo "============================================="
+./build_pthreads.sh
+echo "============================================="
+echo "All builds complete"
 echo "============================================="

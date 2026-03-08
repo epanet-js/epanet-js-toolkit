@@ -9,3 +9,10 @@ RUN apt-get update && \
 RUN cd /opt/epanet/build && \
     emcmake cmake ../src  && \
     emmake cmake --build . --config Release
+
+# Build a pthreads-enabled version of the EPANET static library
+# This is needed because pthreads builds require -pthread at both compile and link time
+RUN mkdir -p /opt/epanet/build-pthreads && \
+    cd /opt/epanet/build-pthreads && \
+    emcmake cmake ../src -DCMAKE_C_FLAGS="-pthread" && \
+    emmake cmake --build . --config Release
