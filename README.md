@@ -177,6 +177,17 @@ pnpm run test
 pnpm run build
 ```
 
+**Local OPFS pthreads test**
+
+To try the browser OPFS path with pthreads enabled, build the alternate engine bundle and run the local isolation server from the repo root.
+
+```sh
+pnpm run build:engine:pthreads
+pnpm run serve:opfs-test
+```
+
+Then open `http://localhost:8080/opfs-memory-test.html` and choose **Local pthreads build**.
+
 **Publishing epanet-js**
 
 `sh

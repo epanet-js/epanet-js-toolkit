@@ -2,6 +2,22 @@
 
 set -e
 
+BUILD_VARIANT="${EPANET_ENGINE_VARIANT:-default}"
+PTHREAD_POOL_SIZE="${EPANET_ENGINE_PTHREAD_POOL_SIZE:-4}"
+
+case "$BUILD_VARIANT" in
+    default)
+        OUTPUT_BASENAME="index"
+        ;;
+    pthreads)
+        OUTPUT_BASENAME="index.pthreads"
+        ;;
+    *)
+        echo "Unsupported build variant: $BUILD_VARIANT" >&2
+        exit 1
+        ;;
+esac
+
 echo "============================================="
 echo "Compiling EPANET to WASM"
 echo "============================================="
@@ -21,26 +37,47 @@ echo "============================================="
     ./generate_exports.sh
 
     # Read the EPANET functions from the JSON file and add memory management functions
-    EXPORTED_FUNCTIONS=$(cat build/epanet_exports.json )
+    EXPORTED_FUNCTIONS=$(node -e "const fs = require('fs'); const exported = JSON.parse(fs.readFileSync('build/epanet_exports.json', 'utf8')); exported.push('_epanet_supports_opfs', '_epanet_can_mount_opfs', '_epanet_mount_opfs'); process.stdout.write(JSON.stringify([...new Set(exported)]));")
 
-    emcc -O3 /opt/epanet/build/lib/libepanet2.a opfs_root.c \
-    -o dist/index.js \
-    -s WASM=1 \
-    -s WASMFS=1 \
-    -s "EXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}" \
-    -s MODULARIZE=1 \
-    -s EXPORT_ES6=1 \
-    -s FORCE_FILESYSTEM=1 \
-    -s EXPORTED_RUNTIME_METHODS=['FS','getValue','lengthBytesUTF8','stringToUTF8','stringToNewUTF8','UTF8ToString','stackSave','cwrap','stackRestore','stackAlloc'] \
-    -s ASSERTIONS=0 \
-    -s ALLOW_MEMORY_GROWTH=1 \
-    -s SINGLE_FILE=1 \
-    -s ENVIRONMENT=web,worker,node \
-    -msimd128 \
-    --closure 0 \
-    # -s SAFE_HEAP=0 \
-    # -s INITIAL_MEMORY=1024MB \
-     
+        # OPFS is enabled through WasmFS at runtime and mounted explicitly under
+        # /opfs when the caller requests it.
+        # The default bundle stays single-threaded and falls back to memory.
+        # The pthreads bundle enables a supported OPFS path for browser testing.
+        EMCC_ARGS=(
+            -O3
+            /opt/epanet/build/lib/libepanet2.a
+            opfs_root.c
+            -o "dist/${OUTPUT_BASENAME}.js"
+            -s WASM=1
+            -s WASMFS=1
+            -s "EXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS}"
+            -s MODULARIZE=1
+            -s EXPORT_ES6=1
+            -s FORCE_FILESYSTEM=1
+            -s EXPORTED_RUNTIME_METHODS=['FS','getValue','lengthBytesUTF8','stringToUTF8','stringToNewUTF8','UTF8ToString','stackSave','cwrap','stackRestore','stackAlloc']
+            -s ASSERTIONS=0
+            -s ALLOW_MEMORY_GROWTH=1
+            -s SINGLE_FILE=1
+            -s ASSERTIONS=1
+            -s ENVIRONMENT=web,worker,node
+            -msimd128
+            --closure
+            0
+        )
+
+        if [ "$BUILD_VARIANT" = "pthreads" ]; then
+            EMCC_ARGS+=(
+                -pthread
+                -s PTHREAD_POOL_SIZE=${PTHREAD_POOL_SIZE}
+                -s PTHREAD_POOL_SIZE_STRICT=2
+            )
+        fi
+
+        # Optional experimental JSPI-based OPFS support for the single-threaded path:
+        # EMCC_ARGS+=( -s JSPI=1 )
+
+        echo "Build variant: ${BUILD_VARIANT}"
+        emcc "${EMCC_ARGS[@]}"
     
     #-s EXPORT_ALL=1 \
     #-s SINGLE_FILE=1 \
@@ -83,8 +120,8 @@ echo "============================================="
     #mv index.js dist
     #mv epanet_version.wasm dist
 
-    echo "Creating index.cjs from index.js with CommonJS export"
-    sed -e '$ s/export default Module;/module.exports = Module;/' -e 's/import\.meta\.url/__filename/' dist/index.js > dist/index.cjs
+    echo "Creating ${OUTPUT_BASENAME}.cjs from ${OUTPUT_BASENAME}.js with CommonJS export"
+    sed -e '$ s/export default Module;/module.exports = Module;/' -e 's/import\.meta\.url/__filename/' "dist/${OUTPUT_BASENAME}.js" > "dist/${OUTPUT_BASENAME}.cjs"
 
 )
 echo "============================================="

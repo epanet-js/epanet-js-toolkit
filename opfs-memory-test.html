@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EPANET OPFS Memory Test</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0f172a;
+        --panel: #111827;
+        --panel-border: #334155;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-strong: #0ea5e9;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: linear-gradient(180deg, #020617 0%, #111827 100%);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 4vw, 3rem);
+      }
+
+      p {
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel {
+        background: rgba(17, 24, 39, 0.88);
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.25);
+      }
+
+      .controls {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        align-items: stretch;
+      }
+
+      .dropzone {
+        border: 2px dashed var(--accent);
+        border-radius: 16px;
+        padding: 28px;
+        text-align: center;
+        transition:
+          border-color 120ms ease,
+          transform 120ms ease,
+          background 120ms ease;
+        background: rgba(14, 165, 233, 0.08);
+      }
+
+      .dropzone.dragover {
+        border-color: var(--success);
+        background: rgba(34, 197, 94, 0.12);
+        transform: translateY(-1px);
+      }
+
+      .dropzone button,
+      .actions button {
+        appearance: none;
+        border: none;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #082f49;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .dropzone button:hover,
+      .actions button:hover {
+        background: var(--accent-strong);
+        color: white;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+
+      .actions button[disabled] {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .field label {
+        font-weight: 600;
+      }
+
+      .field input {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid #475569;
+        padding: 12px;
+        font: inherit;
+        background: #020617;
+        color: var(--text);
+      }
+
+      .field select {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid #475569;
+        padding: 12px;
+        font: inherit;
+        background: #020617;
+        color: var(--text);
+      }
+
+      .stats {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .stat-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+
+      .status {
+        font-weight: 700;
+      }
+
+      .status.ready {
+        color: var(--success);
+      }
+
+      .status.running {
+        color: var(--warning);
+      }
+
+      .status.error {
+        color: var(--danger);
+      }
+
+      .log {
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9rem;
+        line-height: 1.45;
+        max-height: 340px;
+        overflow: auto;
+        background: #020617;
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        padding: 16px;
+      }
+
+      .hint {
+        font-size: 0.9rem;
+      }
+
+      code {
+        color: #bae6fd;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>EPANET OPFS Memory Test</h1>
+      <p>
+        Load a local <code>.inp</code> file, run the simulation in a module
+        worker, and watch browser memory in DevTools while comparing this branch
+        against older builds.
+      </p>
+
+      <section class="grid controls">
+        <div class="panel">
+          <div id="dropzone" class="dropzone">
+            <p><strong>Drop an INP file here</strong></p>
+            <p>or choose one from disk</p>
+            <button id="pick-file" type="button">Choose INP File</button>
+            <input id="file-input" type="file" accept=".inp" hidden />
+            <p id="file-name" class="hint">No file selected</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="field">
+            <label for="source-mode">Simulation Source</label>
+            <select id="source-mode">
+              <option value="local">Local repo build</option>
+              <option value="local-pthreads">Local pthreads build</option>
+              <option value="published-0.8.0">
+                Published `epanet-js@0.8.0`
+              </option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="iterations">Iterations</label>
+            <input
+              id="iterations"
+              type="number"
+              min="1"
+              max="100"
+              step="1"
+              value="1"
+            />
+          </div>
+          <div class="field">
+            <label for="sample-ms">Main thread heap sample interval (ms)</label>
+            <input
+              id="sample-ms"
+              type="number"
+              min="100"
+              max="5000"
+              step="100"
+              value="250"
+            />
+          </div>
+          <div class="actions">
+            <button id="run" type="button" disabled>Run In Worker</button>
+            <button id="clear" type="button">Clear Log</button>
+          </div>
+          <p class="hint">
+            Switch between the local repo build and published
+            <code>epanet-js@0.8.0</code>. The local builds use JS-side OPFS
+            persistence: EPANET runs entirely in WASM memory for speed, then the
+            output files are written to the browser OPFS via
+            <code>createWritable()</code> after each run. Check the
+            <code>epanet-opfs-test/</code> directory in DevTools → Application →
+            Storage → OPFS. Run this page via
+            <code>pnpm run serve:opfs-test</code>
+            for cross-origin isolation (required for OPFS writes from a Worker).
+          </p>
+        </div>
+      </section>
+
+      <section class="grid stats" style="margin-top: 16px">
+        <div class="panel">
+          <div>Status</div>
+          <div id="status" class="stat-value status">Booting…</div>
+        </div>
+        <div class="panel">
+          <div>Total Duration</div>
+          <div id="total-duration" class="stat-value">—</div>
+        </div>
+        <div class="panel">
+          <div>Average Duration</div>
+          <div id="average-duration" class="stat-value">—</div>
+        </div>
+        <div class="panel">
+          <div>Peak Main Heap</div>
+          <div id="peak-heap" class="stat-value">—</div>
+        </div>
+        <div class="panel">
+          <div>OUT File Size</div>
+          <div id="output-size" class="stat-value">—</div>
+        </div>
+      </section>
+
+      <section class="grid" style="margin-top: 16px">
+        <div class="panel">
+          <h2>Notes</h2>
+          <p class="hint">
+            For the cleanest comparison, open Chrome DevTools and watch
+            <strong>Performance</strong> or <strong>Memory</strong> while this
+            page runs. The built-in heap readout below uses
+            <code>performance.memory</code> when available, so it helps but
+            should not replace DevTools.
+          </p>
+          <p class="hint" id="memory-support"></p>
+        </div>
+        <div class="panel">
+          <h2>Log</h2>
+          <div id="log" class="log"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      const worker = new Worker("./opfs-memory-test.worker.js", {
+        type: "module",
+      });
+
+      const dropzone = document.getElementById("dropzone");
+      const fileInput = document.getElementById("file-input");
+      const pickFileButton = document.getElementById("pick-file");
+      const fileName = document.getElementById("file-name");
+      const iterationsInput = document.getElementById("iterations");
+      const sourceMode = document.getElementById("source-mode");
+      const sampleMsInput = document.getElementById("sample-ms");
+      const runButton = document.getElementById("run");
+      const clearButton = document.getElementById("clear");
+      const status = document.getElementById("status");
+      const totalDuration = document.getElementById("total-duration");
+      const averageDuration = document.getElementById("average-duration");
+      const peakHeap = document.getElementById("peak-heap");
+      const outputSize = document.getElementById("output-size");
+      const memorySupport = document.getElementById("memory-support");
+      const log = document.getElementById("log");
+
+      let selectedFile = null;
+      let running = false;
+      let sampleTimer = null;
+      let peakHeapBytes = 0;
+      let workerSources = null;
+
+      function appendLog(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        log.textContent += `[${timestamp}] ${message}\n`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function setStatus(text, className) {
+        status.textContent = text;
+        status.className = `stat-value status ${className}`;
+      }
+
+      function formatDuration(ms) {
+        return `${ms.toFixed(1)} ms`;
+      }
+
+      function formatBytes(bytes) {
+        if (!Number.isFinite(bytes) || bytes <= 0) {
+          return "0 B";
+        }
+
+        const units = ["B", "KB", "MB", "GB"];
+        let value = bytes;
+        let index = 0;
+        while (value >= 1024 && index < units.length - 1) {
+          value /= 1024;
+          index += 1;
+        }
+        return `${value.toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
+      }
+
+      function setSelectedFile(file) {
+        selectedFile = file;
+        fileName.textContent = file
+          ? `${file.name} • ${formatBytes(file.size)}`
+          : "No file selected";
+        runButton.disabled = !file || running;
+      }
+
+      function beginHeapSampling() {
+        peakHeapBytes = 0;
+        peakHeap.textContent = "Sampling…";
+
+        if (!("memory" in performance)) {
+          peakHeap.textContent = "Unsupported";
+          return;
+        }
+
+        const intervalMs = Math.max(100, Number(sampleMsInput.value) || 250);
+        sampleTimer = window.setInterval(() => {
+          const used = performance.memory?.usedJSHeapSize ?? 0;
+          peakHeapBytes = Math.max(peakHeapBytes, used);
+          peakHeap.textContent = formatBytes(peakHeapBytes);
+        }, intervalMs);
+      }
+
+      function stopHeapSampling() {
+        if (sampleTimer !== null) {
+          clearInterval(sampleTimer);
+          sampleTimer = null;
+        }
+      }
+
+      async function runSimulation() {
+        if (!selectedFile || running) {
+          return;
+        }
+
+        running = true;
+        runButton.disabled = true;
+        setStatus("Running", "running");
+        totalDuration.textContent = "—";
+        averageDuration.textContent = "—";
+        outputSize.textContent = "—";
+        appendLog(
+          `Preparing ${selectedFile.name} for worker execution using ${sourceMode.value}...`,
+        );
+        beginHeapSampling();
+
+        try {
+          const buffer = await selectedFile.arrayBuffer();
+          worker.postMessage(
+            {
+              type: "run-simulation",
+              payload: {
+                fileName: selectedFile.name,
+                inputBytes: buffer,
+                iterations: Number(iterationsInput.value) || 1,
+                source: sourceMode.value,
+              },
+            },
+            [buffer],
+          );
+        } catch (error) {
+          stopHeapSampling();
+          running = false;
+          runButton.disabled = false;
+          setStatus("Error", "error");
+          appendLog(
+            `Failed to start run: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+
+      function handleFiles(files) {
+        const file = files?.[0];
+        if (!file) {
+          return;
+        }
+        setSelectedFile(file);
+        appendLog(`Selected ${file.name}`);
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropzone.classList.remove("dragover");
+        });
+      });
+
+      dropzone.addEventListener("drop", (event) => {
+        handleFiles(event.dataTransfer?.files);
+      });
+
+      pickFileButton.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+      runButton.addEventListener("click", runSimulation);
+      clearButton.addEventListener("click", () => {
+        log.textContent = "";
+      });
+
+      worker.addEventListener("message", (event) => {
+        const { type, payload } = event.data ?? {};
+
+        if (type === "ready") {
+          workerSources = payload.sources;
+          setStatus("Ready", "ready");
+          appendLog(`Worker ready. Local source: ${payload.sources.local}`);
+          appendLog(
+            `Worker ready. Local pthreads source: ${payload.sources["local-pthreads"]}`,
+          );
+          appendLog(
+            `Worker ready. Published source: ${payload.sources["published-0.8.0"]}`,
+          );
+          appendLog(
+            `Worker OPFS support: ${payload.supportsOpfsInWorker ? "available ✓" : "not available ✗"}`,
+          );
+          appendLog(
+            `Worker pthread support: ${payload.supportsPthreadsInWorker ? "available ✓" : "not available (COOP/COEP required)"}`,
+          );
+          appendLog(
+            `Cross-origin isolated: ${payload.crossOriginIsolated ? "yes ✓" : "no ✗ — run via serve:opfs-test for OPFS persistence"}`,
+          );
+          if (payload.opfsDirName) {
+            appendLog(`OPFS output dir: ${payload.opfsDirName}`);
+          }
+          runButton.disabled = !selectedFile;
+          return;
+        }
+
+        if (type === "status") {
+          appendLog(payload);
+          return;
+        }
+
+        if (type === "progress") {
+          appendLog(
+            `Iteration ${payload.iteration}: ${formatDuration(payload.iterationDurationMs)}, OUT ${formatBytes(payload.outputBytes)}, RPT ${formatBytes(payload.reportBytes)}`,
+          );
+          return;
+        }
+
+        if (type === "result") {
+          stopHeapSampling();
+          running = false;
+          runButton.disabled = !selectedFile;
+          setStatus("Ready", "ready");
+          totalDuration.textContent = formatDuration(payload.totalDurationMs);
+          averageDuration.textContent = formatDuration(
+            payload.averageDurationMs,
+          );
+          outputSize.textContent = formatBytes(payload.outputBytes);
+          if (!("memory" in performance)) {
+            peakHeap.textContent = "Unsupported";
+          } else if (peakHeapBytes > 0) {
+            peakHeap.textContent = formatBytes(peakHeapBytes);
+          }
+          appendLog(
+            `Finished ${payload.iterations} iteration(s) in ${formatDuration(payload.totalDurationMs)}.`,
+          );
+          appendLog(`Source used: ${payload.source}`);
+          appendLog(`Import path: ${payload.importPath}`);
+          if (payload.storage) {
+            appendLog(`Storage mode: ${payload.storage.mode}`);
+            if (payload.storage.mode === "opfs-visible") {
+              appendLog(
+                `✅ OPFS persistence confirmed in: ${payload.storage.opfsDir ?? "epanet-opfs-test"}`,
+              );
+            } else if (payload.storage.mode === "opfs-not-observed") {
+              appendLog(
+                `⚠️ OPFS persistence failed. Reason: ${payload.storage.persistReason ?? "unknown"}`,
+              );
+            }
+            if (payload.storage.opfsError) {
+              appendLog(`OPFS inspection error: ${payload.storage.opfsError}`);
+            }
+            if (payload.storage.opfsEntries?.length) {
+              appendLog(
+                `OPFS entries (${payload.storage.opfsEntries.length}): ${payload.storage.opfsEntries
+                  .map((entry) => `${entry.kind}:${entry.path}`)
+                  .join(", ")}`,
+              );
+            } else if (payload.storage.mode !== "package-managed") {
+              appendLog("OPFS entries: (root currently empty)");
+            }
+          }
+          return;
+        }
+
+        if (type === "error") {
+          stopHeapSampling();
+          running = false;
+          runButton.disabled = !selectedFile;
+          setStatus("Error", "error");
+          appendLog(`Worker error: ${payload.message}`);
+          if (payload.stack) {
+            appendLog(payload.stack);
+          }
+        }
+      });
+
+      worker.addEventListener("error", (event) => {
+        stopHeapSampling();
+        running = false;
+        runButton.disabled = true;
+        setStatus("Error", "error");
+        appendLog(`Worker bootstrap failed: ${event.message}`);
+      });
+
+      if ("memory" in performance) {
+        memorySupport.textContent =
+          "Main-thread heap sampling is available in this browser.";
+      } else {
+        memorySupport.textContent =
+          "Main-thread heap sampling is not available here, so rely on browser DevTools for memory comparison.";
+      }
+
+      appendLog("Page ready. Choose or drop an INP file to begin.");
+    </script>
+  </body>
+</html>

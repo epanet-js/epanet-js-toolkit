@@ -17,6 +17,20 @@ cd packages/epanet-engine
 pnpm run build
 ```
 
+## OPFS notes
+
+- The Wasm build uses `WasmFS` and mounts the `OPFS` backend explicitly under `/opfs` only when the build has a supported execution strategy for OPFS.
+- In practice that means either a `PTHREADS` build or a `JSPI`-enabled build. A plain single-threaded build falls back to memory.
+- On the browser main thread the build intentionally falls back to the memory backend unless you opt into upstream `JSPI` support.
+- Do not add `-sASYNCIFY=2` for this. Current Emscripten guidance is to use `JSPI` for the main-thread path, and that remains an experimental trade-off.
+- `opfs-memory-test.html` and `opfs-memory-test.worker.js` can be used to confirm whether test files are visible in the browser's OPFS after a run.
+
+### Pthreads variant
+
+- Run `pnpm run build:pthreads` in `packages/epanet-engine` to emit `dist/index.pthreads.js` alongside the default single-threaded build.
+- The pthreads variant is intended for browser testing and requires cross-origin isolation headers so that `SharedArrayBuffer` is available.
+- From the repository root you can use `pnpm run serve:opfs-test` to serve the OPFS test page with the required `COOP` and `COEP` headers.
+
 **Building epanet-js**
 
 You must first build epanet-engine before you can test or build epanet-js.

@@ -4,7 +4,9 @@
   "scripts": {
     "build": "pnpm -r build",
     "build:engine": "pnpm --filter @model-create/epanet-engine build",
+    "build:engine:pthreads": "pnpm --filter @model-create/epanet-engine build:pthreads",
     "build:js": "pnpm --filter epanet-js build",
+    "serve:opfs-test": "node ./scripts/serve-opfs-test.mjs",
     "test": "pnpm --filter epanet-js test",
     "test:coverage-ci": "pnpm --filter epanet-js test:coverage-ci"
   },
