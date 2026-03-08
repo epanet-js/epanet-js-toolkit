@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EPANET OPFS Memory Test</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: rgba(17, 24, 39, 0.88);
+        --border: #334155;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-hover: #0ea5e9;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #020617 0%, #111827 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      main {
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+      }
+
+      h2 {
+        margin: 0 0 12px;
+        font-size: 1.15rem;
+      }
+
+      p {
+        color: var(--muted);
+        line-height: 1.55;
+        margin: 0 0 10px;
+      }
+
+      code {
+        color: #bae6fd;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.25);
+      }
+
+      /* ---- Controls row ---- */
+      .controls {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+
+      /* ---- Dropzone ---- */
+      .dropzone {
+        border: 2px dashed var(--accent);
+        border-radius: 16px;
+        padding: 28px;
+        text-align: center;
+        transition: border-color 120ms, background 120ms, transform 120ms;
+        background: rgba(14, 165, 233, 0.06);
+      }
+
+      .dropzone.dragover {
+        border-color: var(--success);
+        background: rgba(34, 197, 94, 0.1);
+        transform: translateY(-1px);
+      }
+
+      /* ---- Buttons ---- */
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #082f49;
+        padding: 11px 18px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 100ms;
+      }
+
+      button:hover {
+        background: var(--accent-hover);
+        color: #fff;
+      }
+
+      button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      /* ---- Form fields ---- */
+      .field {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .field label {
+        font-weight: 600;
+        font-size: 0.92rem;
+      }
+
+      .field select,
+      .field input {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid #475569;
+        padding: 10px 12px;
+        font: inherit;
+        font-size: 0.95rem;
+        background: #020617;
+        color: var(--text);
+      }
+
+      /* ---- Stats cards ---- */
+      .stats {
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      }
+
+      .stat-label {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+
+      .status-text {
+        font-weight: 700;
+      }
+
+      .status-text.ready {
+        color: var(--success);
+      }
+
+      .status-text.running {
+        color: var(--warning);
+      }
+
+      .status-text.error {
+        color: var(--danger);
+      }
+
+      .status-text.booting {
+        color: var(--muted);
+      }
+
+      /* ---- Log ---- */
+      .log {
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        max-height: 380px;
+        overflow-y: auto;
+        background: #020617;
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .hint {
+        font-size: 0.88rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>⚙️ EPANET OPFS Memory Test</h1>
+      <p>
+        Load a <code>.inp</code> network file, run the EPANET simulation in a
+        Web Worker, and compare memory usage between the standard build, the new
+        pthreads/WasmFS/OPFS build, and the published
+        <code>epanet-js@0.8.0</code>.
+      </p>
+      <p class="hint">
+        Run this page via
+        <code>pnpm run serve:opfs-test</code> to enable cross-origin isolation
+        (required for SharedArrayBuffer / pthreads / OPFS).
+      </p>
+
+      <!-- ────────── Controls ────────── -->
+      <section class="grid controls" style="margin-top: 20px">
+        <!-- File picker -->
+        <div class="panel">
+          <div id="dropzone" class="dropzone">
+            <p><strong>Drop an .inp file here</strong></p>
+            <p class="hint">or pick one from disk</p>
+            <button id="btn-pick" type="button">Choose File</button>
+            <input id="file-input" type="file" accept=".inp" hidden />
+            <p id="file-name" class="hint" style="margin-top: 10px">
+              No file selected
+            </p>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="panel">
+          <div class="field">
+            <label for="source">Engine Source</label>
+            <select id="source">
+              <option value="standard">
+                Local — Standard (MEMFS + JS OPFS persistence)
+              </option>
+              <option value="pthreads">
+                Local — Pthreads (WasmFS + OPFS at C level)
+              </option>
+              <option value="published">Published epanet-js@0.8.0 (baseline)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="iterations">Iterations</label>
+            <input
+              id="iterations"
+              type="number"
+              min="1"
+              max="100"
+              value="1"
+            />
+          </div>
+          <div class="field">
+            <label for="sample-ms"
+              >Main-thread heap sample interval (ms)</label
+            >
+            <input
+              id="sample-ms"
+              type="number"
+              min="100"
+              max="5000"
+              step="100"
+              value="250"
+            />
+          </div>
+          <div class="actions">
+            <button id="btn-run" type="button" disabled>Run Simulation</button>
+            <button id="btn-clear" type="button">Clear Log</button>
+          </div>
+          <p class="hint" style="margin-top: 12px">
+            <strong>Standard</strong> runs EPANET in normal WASM memory then
+            persists output to OPFS from JS after each run.
+            <strong>Pthreads</strong> runs EPANET with WasmFS where
+            <code>fopen</code>/<code>fwrite</code> go straight to OPFS-backed
+            files — zero JS persistence needed. Check DevTools → Application →
+            Storage → OPFS to inspect persisted files.
+          </p>
+        </div>
+      </section>
+
+      <!-- ────────── Stats ────────── -->
+      <section class="grid stats" style="margin-top: 16px">
+        <div class="panel">
+          <div class="stat-label">Status</div>
+          <div id="stat-status" class="stat-value status-text booting">
+            Booting…
+          </div>
+        </div>
+        <div class="panel">
+          <div class="stat-label">Total Duration</div>
+          <div id="stat-total" class="stat-value">—</div>
+        </div>
+        <div class="panel">
+          <div class="stat-label">Avg / Iteration</div>
+          <div id="stat-avg" class="stat-value">—</div>
+        </div>
+        <div class="panel">
+          <div class="stat-label">Peak Main Heap</div>
+          <div id="stat-heap" class="stat-value">—</div>
+        </div>
+        <div class="panel">
+          <div class="stat-label">Output File</div>
+          <div id="stat-output" class="stat-value">—</div>
+        </div>
+        <div class="panel">
+          <div class="stat-label">Storage Mode</div>
+          <div id="stat-storage" class="stat-value" style="font-size: 1rem">
+            —
+          </div>
+        </div>
+      </section>
+
+      <!-- ────────── Info + Log ────────── -->
+      <section class="grid" style="margin-top: 16px">
+        <div class="panel">
+          <h2>How to Compare</h2>
+          <p class="hint">
+            Open Chrome DevTools → <strong>Memory</strong> tab. Take a heap
+            snapshot before and after each run. The
+            <strong>pthreads + OPFS</strong> build should show significantly less
+            WASM heap growth for large networks because output files are backed
+            by the on-disk OPFS rather than RAM.
+          </p>
+          <p class="hint">
+            The <strong>Peak Main Heap</strong> stat uses
+            <code>performance.memory</code> (Chrome only). For Firefox/Safari,
+            rely on their native DevTools profilers.
+          </p>
+          <p class="hint" id="memory-note"></p>
+        </div>
+        <div class="panel">
+          <h2>Log</h2>
+          <div id="log" class="log"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      // ── DOM refs ──
+      const dom = {
+        dropzone: document.getElementById("dropzone"),
+        fileInput: document.getElementById("file-input"),
+        btnPick: document.getElementById("btn-pick"),
+        btnRun: document.getElementById("btn-run"),
+        btnClear: document.getElementById("btn-clear"),
+        fileName: document.getElementById("file-name"),
+        source: document.getElementById("source"),
+        iterations: document.getElementById("iterations"),
+        sampleMs: document.getElementById("sample-ms"),
+        statStatus: document.getElementById("stat-status"),
+        statTotal: document.getElementById("stat-total"),
+        statAvg: document.getElementById("stat-avg"),
+        statHeap: document.getElementById("stat-heap"),
+        statOutput: document.getElementById("stat-output"),
+        statStorage: document.getElementById("stat-storage"),
+        memNote: document.getElementById("memory-note"),
+        log: document.getElementById("log"),
+      };
+
+      // ── State ──
+      let selectedFile = null;
+      let running = false;
+      let heapTimer = null;
+      let peakBytes = 0;
+
+      // ── Worker ──
+      const worker = new Worker("./opfs-memory-test.worker.js", {
+        type: "module",
+      });
+
+      // ── Formatters ──
+      const fmtMs = (ms) => `${ms.toFixed(1)} ms`;
+      const fmtBytes = (n) => {
+        if (!Number.isFinite(n) || n <= 0) return "0 B";
+        const u = ["B", "KB", "MB", "GB"];
+        let v = n,
+          i = 0;
+        while (v >= 1024 && i < u.length - 1) {
+          v /= 1024;
+          i++;
+        }
+        return `${v.toFixed(i === 0 ? 0 : 2)} ${u[i]}`;
+      };
+
+      // ── Helpers ──
+      function appendLog(msg) {
+        const ts = new Date().toLocaleTimeString();
+        dom.log.textContent += `[${ts}] ${msg}\n`;
+        dom.log.scrollTop = dom.log.scrollHeight;
+      }
+
+      function setStatus(text, cls) {
+        dom.statStatus.textContent = text;
+        dom.statStatus.className = `stat-value status-text ${cls}`;
+      }
+
+      function setFile(file) {
+        selectedFile = file;
+        dom.fileName.textContent = file
+          ? `${file.name} — ${fmtBytes(file.size)}`
+          : "No file selected";
+        dom.btnRun.disabled = !file || running;
+      }
+
+      function startHeapSampling() {
+        peakBytes = 0;
+        dom.statHeap.textContent = "Sampling…";
+        if (!("memory" in performance)) {
+          dom.statHeap.textContent = "N/A (use DevTools)";
+          return;
+        }
+        const ms = Math.max(100, Number(dom.sampleMs.value) || 250);
+        heapTimer = setInterval(() => {
+          const used = performance.memory?.usedJSHeapSize ?? 0;
+          peakBytes = Math.max(peakBytes, used);
+          dom.statHeap.textContent = fmtBytes(peakBytes);
+        }, ms);
+      }
+
+      function stopHeapSampling() {
+        if (heapTimer !== null) {
+          clearInterval(heapTimer);
+          heapTimer = null;
+        }
+      }
+
+      // ── Run ──
+      async function run() {
+        if (!selectedFile || running) return;
+        running = true;
+        dom.btnRun.disabled = true;
+        setStatus("Running", "running");
+        dom.statTotal.textContent = "—";
+        dom.statAvg.textContent = "—";
+        dom.statOutput.textContent = "—";
+        dom.statStorage.textContent = "—";
+
+        const source = dom.source.value;
+        appendLog(`Starting ${source} run for ${selectedFile.name}…`);
+        startHeapSampling();
+
+        try {
+          const buf = await selectedFile.arrayBuffer();
+          worker.postMessage(
+            {
+              type: "run-simulation",
+              payload: {
+                fileName: selectedFile.name,
+                inputBytes: buf,
+                iterations: Number(dom.iterations.value) || 1,
+                source,
+              },
+            },
+            [buf],
+          );
+        } catch (e) {
+          stopHeapSampling();
+          running = false;
+          dom.btnRun.disabled = false;
+          setStatus("Error", "error");
+          appendLog(`Launch error: ${e.message || e}`);
+        }
+      }
+
+      // ── File handling ──
+      function handleFiles(files) {
+        const f = files?.[0];
+        if (f) {
+          setFile(f);
+          appendLog(`Selected: ${f.name}`);
+        }
+      }
+
+      ["dragenter", "dragover"].forEach((ev) =>
+        dom.dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dom.dropzone.classList.add("dragover");
+        }),
+      );
+      ["dragleave", "drop"].forEach((ev) =>
+        dom.dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dom.dropzone.classList.remove("dragover");
+        }),
+      );
+      dom.dropzone.addEventListener("drop", (e) =>
+        handleFiles(e.dataTransfer?.files),
+      );
+      dom.btnPick.addEventListener("click", () => dom.fileInput.click());
+      dom.fileInput.addEventListener("change", () =>
+        handleFiles(dom.fileInput.files),
+      );
+      dom.btnRun.addEventListener("click", run);
+      dom.btnClear.addEventListener("click", () => {
+        dom.log.textContent = "";
+      });
+
+      // ── Worker messages ──
+      worker.addEventListener("message", ({ data }) => {
+        const { type, payload } = data ?? {};
+
+        switch (type) {
+          case "ready": {
+            setStatus("Ready", "ready");
+            appendLog(
+              `Worker ready — crossOriginIsolated: ${payload.crossOriginIsolated ? "yes ✓" : "no ✗"}`,
+            );
+            appendLog(
+              `SharedArrayBuffer: ${payload.hasSharedArrayBuffer ? "yes ✓" : "no ✗"}`,
+            );
+            appendLog(
+              `OPFS API: ${payload.hasOpfsApi ? "yes ✓" : "no ✗"}`,
+            );
+            appendLog(`Sources:`);
+            appendLog(`  standard: ${payload.sources.standard}`);
+            appendLog(`  pthreads: ${payload.sources.pthreads}`);
+            appendLog(`  published: ${payload.sources.published}`);
+            dom.btnRun.disabled = !selectedFile;
+            break;
+          }
+
+          case "status":
+            appendLog(payload);
+            break;
+
+          case "progress": {
+            const p = payload;
+            appendLog(
+              `  iter ${p.iteration}: ${fmtMs(p.iterationDurationMs)}  OUT ${fmtBytes(p.outputBytes)}  RPT ${fmtBytes(p.reportBytes)}`,
+            );
+            break;
+          }
+
+          case "result": {
+            stopHeapSampling();
+            running = false;
+            dom.btnRun.disabled = !selectedFile;
+            setStatus("Ready", "ready");
+
+            dom.statTotal.textContent = fmtMs(payload.totalDurationMs);
+            dom.statAvg.textContent = fmtMs(payload.averageDurationMs);
+            dom.statOutput.textContent = fmtBytes(payload.outputBytes);
+            dom.statStorage.textContent = payload.opfsMode ?? payload.storage?.mode ?? "—";
+
+            if (!("memory" in performance)) {
+              dom.statHeap.textContent = "N/A";
+            }
+
+            appendLog(`─── Done ───`);
+            appendLog(
+              `Total: ${fmtMs(payload.totalDurationMs)} | Avg: ${fmtMs(payload.averageDurationMs)} | Iterations: ${payload.iterations}`,
+            );
+            appendLog(
+              `OUT: ${fmtBytes(payload.outputBytes)} | RPT: ${fmtBytes(payload.reportBytes)}`,
+            );
+            appendLog(`Source: ${payload.source} (${payload.importPath})`);
+            appendLog(`OPFS mode: ${payload.opfsMode}`);
+
+            const s = payload.storage;
+            if (s) {
+              appendLog(`Storage mode: ${s.mode}`);
+              if (s.opfsError) appendLog(`OPFS error: ${s.opfsError}`);
+              if (s.opfsEntries?.length) {
+                appendLog(`OPFS entries (${s.opfsEntries.length}):`);
+                for (const e of s.opfsEntries) {
+                  appendLog(`  ${e.kind}: ${e.path}`);
+                }
+              } else {
+                appendLog(`OPFS entries: (empty)`);
+              }
+            }
+            appendLog(``);
+            break;
+          }
+
+          case "error": {
+            stopHeapSampling();
+            running = false;
+            dom.btnRun.disabled = !selectedFile;
+            setStatus("Error", "error");
+            appendLog(`❌ Worker error: ${payload.message}`);
+            if (payload.stack) appendLog(payload.stack);
+            break;
+          }
+        }
+      });
+
+      worker.addEventListener("error", (e) => {
+        stopHeapSampling();
+        running = false;
+        dom.btnRun.disabled = true;
+        setStatus("Error", "error");
+        appendLog(`Worker bootstrap error: ${e.message}`);
+      });
+
+      // ── Memory note ──
+      dom.memNote.textContent =
+        "memory" in performance
+          ? "✓ performance.memory is available — heap sampling active."
+          : "ℹ performance.memory is not available in this browser. Use DevTools for memory profiling.";
+
+      appendLog("Page loaded. Select an INP file to begin.");
+    </script>
+  </body>
+</html>
