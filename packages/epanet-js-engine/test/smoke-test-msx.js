@@ -29,31 +29,40 @@ for (const version of VERSIONS) {
   f.FS.writeFile('net.inp', readFileSync(join(__dirname, 'network_msx.inp')))
   f.FS.writeFile('net.msx', readFileSync(join(__dirname, 'network_msx.msx')))
 
-  const phPtr = f.malloc(4)
+  /*const phPtr = f.malloc(4)
   f.EN_createproject(phPtr)
+  console.log('EN_createproject')
   const ph = f.getValue(phPtr, 'i32')
-  f.free(phPtr)
+  f.free(phPtr)*/
 
   const inpPtr = f.allocateUTF8('net.inp')
   const rptPtr = f.allocateUTF8('net.rpt')
   const outPtr = f.allocateUTF8('net.out')
-  f.EN_open(ph, inpPtr, rptPtr, outPtr)
+  f.ENopen(inpPtr, rptPtr, outPtr)
+  console.log('ENopen')
   f.free(inpPtr)
   f.free(rptPtr)
   f.free(outPtr)
 
-  f.EN_solveH(ph)
+  f.ENsolveH()
+  console.log('ENsolveH')
 
   const msxPtr = f.allocateUTF8('net.msx')
   f.MSXopen(msxPtr)
+  console.log('MSXopen')
   f.free(msxPtr)
 
   f.MSXsolveH()
+  console.log('MSXsolveH')
   f.MSXsolveQ()
+  console.log('MSXsolveQ')
   f.MSXreport()
+  console.log('MSXreport')
 
   const rpt = f.FS.readFile('net.rpt', { encoding: 'utf8' })
-  const out = f.FS.readFile('net.out')
+  //const out = f.FS.readFile('net.out')
+  console.log(rpt)
+
 
   assert.ok(rpt.length > 0, 'net.rpt must not be empty')
   assert.ok(out.length > 0, 'net.out must not be empty')
@@ -62,6 +71,9 @@ for (const version of VERSIONS) {
   console.log(rpt)
 
   f.MSXclose()
-  f.EN_close(ph)
-  f.EN_deleteproject(ph)
+  console.log('MSXclose')
+  f.ENclose(ph)
+  console.log('ENclose')
+  /*f.EN_deleteproject(ph)
+  console.log('EN_deleteproject')*/
 }
