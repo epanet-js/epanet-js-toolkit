@@ -7,7 +7,7 @@ extern "C" {
     #include "epanet2_2.h"
 }
 
-#ifdef EPANETMSX_H
+#ifdef INCLUDE_MSX
 extern "C" {
     #include "epanetmsx.h"
 }
@@ -15,6 +15,7 @@ extern "C" {
 
 using namespace emscripten;
 
+#ifdef INCLUDE_MSX
 // Error checking helper - throws JS exception on error
 void checkError(int err, const char* funcName) {
     if (err != 0) {
@@ -24,6 +25,7 @@ void checkError(int err, const char* funcName) {
         throw std::runtime_error(errorMsg);
     }
 }
+#endif
 
 void checkENError(int err, const char* funcName) {
     if (err > 100) {  // EPANET warnings are < 100
@@ -39,18 +41,26 @@ class EpanetMSXEngine {
 private:
     EN_Project enProject;
     bool isEnOpen;
+#ifdef INCLUDE_MSX
     bool isMsxOpen;
+#endif
 
 public:
-    EpanetMSXEngine() : enProject(nullptr), isEnOpen(false), isMsxOpen(false) {
+    EpanetMSXEngine() : enProject(nullptr), isEnOpen(false)
+#ifdef INCLUDE_MSX
+        , isMsxOpen(false)
+#endif
+    {
         int err = EN_createproject(&enProject);
         checkENError(err, "EN_createproject");
     }
 
     ~EpanetMSXEngine() {
+#ifdef INCLUDE_MSX
         if (isMsxOpen) {
             MSXclose();
         }
+#endif
         if (isEnOpen) {
             EN_close(enProject);
         }
@@ -70,10 +80,12 @@ public:
     }
 
     void close() {
+#ifdef INCLUDE_MSX
         if (isMsxOpen) {
             MSXclose();
             isMsxOpen = false;
         }
+#endif
         if (isEnOpen) {
             EN_close(enProject);
             isEnOpen = false;
@@ -168,6 +180,7 @@ public:
         return value;
     }
 
+#ifdef INCLUDE_MSX
     // ==========================================
     // MSX Functions
     // ==========================================
@@ -324,6 +337,7 @@ public:
         int err = MSXgeterror(errorCode, msg, 255);
         return std::string(msg);
     }
+#endif  // INCLUDE_MSX
 };
 
 // Embind bindings
@@ -347,6 +361,7 @@ EMSCRIPTEN_BINDINGS(epanetmsx_engine) {
         .function("getLinkIndex", &EpanetMSXEngine::getLinkIndex)
         .function("getLinkId", &EpanetMSXEngine::getLinkId)
         .function("getLinkValue", &EpanetMSXEngine::getLinkValue)
+#ifdef INCLUDE_MSX
         // MSX methods
         .function("msxOpen", &EpanetMSXEngine::msxOpen)
         .function("msxClose", &EpanetMSXEngine::msxClose)
@@ -369,5 +384,7 @@ EMSCRIPTEN_BINDINGS(epanetmsx_engine) {
         .function("msxGetSource", &EpanetMSXEngine::msxGetSource)
         .function("msxSetSource", &EpanetMSXEngine::msxSetSource)
         .function("msxGetQual", &EpanetMSXEngine::msxGetQual)
-        .function("msxGetError", &EpanetMSXEngine::msxGetError);
+        .function("msxGetError", &EpanetMSXEngine::msxGetError)
+#endif  // INCLUDE_MSX
+        ;
 }
