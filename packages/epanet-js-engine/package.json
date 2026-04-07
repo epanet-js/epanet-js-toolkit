@@ -9,7 +9,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c && cp src/index.d.ts dist/index.d.ts && cp -r lib/. dist/",
+    "build": "./build.sh && rollup -c && cp src/index.d.ts dist/index.d.ts && cp -r lib/. dist/",
     "test": "node test/smoke-test.js",
     "prepublishOnly": "npm run build"
   },
