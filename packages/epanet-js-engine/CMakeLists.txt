@@ -14,10 +14,13 @@ add_executable(epanetmsx-js
     bindings/epanetmsx.cpp
 )
 
-target_link_libraries(epanetmsx-js
-    epanetmsx
-    epanet2
-)
+if(INCLUDE_MSX)
+    target_compile_definitions(epanetmsx-js PRIVATE INCLUDE_MSX)
+    target_link_libraries(epanetmsx-js epanetmsx epanet2)
+else()
+    target_link_libraries(epanetmsx-js epanet2)
+endif()
+
 
 target_include_directories(epanetmsx-js PRIVATE
     ${CMAKE_SOURCE_DIR}/EPANETMSX/src/solver/include
