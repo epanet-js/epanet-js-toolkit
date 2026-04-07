@@ -52,7 +52,7 @@ echo "[4/6] Applying patches..."
 PATCHES_DIR="${SCRIPT_DIR}/patches"
 for patch in "${PATCHES_DIR}"/*.patch; do
     echo "  -> Applying $(basename ${patch})..."
-    git -C EPANETMSX apply "${patch}"
+    git -C EPANETMSX apply --whitespace=fix "${patch}"
 done
 echo "  -> Done."
 
