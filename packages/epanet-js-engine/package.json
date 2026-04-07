@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "./build.sh && rollup -c && cp src/index.d.ts dist/index.d.ts && cp -r lib/. dist/",
-    "test": "node test/smoke-test.js",
+    "test": "node test/smoke-test.js && node test/smoke-test-msx.js",
     "prepublishOnly": "npm run build"
   },
   "exports": {
