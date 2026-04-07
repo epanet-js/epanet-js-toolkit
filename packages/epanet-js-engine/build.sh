@@ -4,8 +4,7 @@
 # This script clones the repositories, applies necessary patches, and builds with emcmake
 #
 # Usage:
-#   ./build.sh              # EPANET only
-#   ./build.sh enable_msx   # EPANET + MSX
+#   ./build.sh [enable_msx] [--epanet-tag=<tag>]
 
 set -e  # Exit on any error
 
@@ -13,7 +12,10 @@ set -e  # Exit on any error
 EPANET_TAG="${EPANET_TAG:-v2.3.5}"
 ENABLE_MSX=0
 for arg in "$@"; do
-    [ "$arg" = "enable_msx" ] && ENABLE_MSX=1
+    case "$arg" in
+        enable_msx)        ENABLE_MSX=1 ;;
+        --epanet-tag=*)    EPANET_TAG="${arg#--epanet-tag=}" ;;
+    esac
 done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
