@@ -140,7 +140,7 @@ public:
 
     int getNodeIndex(const std::string& id) {
         int index;
-        int err = EN_getnodeindex(enProject, id.c_str(), &index);
+        int err = EN_getnodeindex(enProject, (char *)id.c_str(), &index);
         checkENError(err, "getNodeIndex");
         return index;
     }
@@ -161,7 +161,7 @@ public:
 
     int getLinkIndex(const std::string& id) {
         int index;
-        int err = EN_getlinkindex(enProject, id.c_str(), &index);
+        int err = EN_getlinkindex(enProject, (char *)id.c_str(), &index);
         checkENError(err, "getLinkIndex");
         return index;
     }
