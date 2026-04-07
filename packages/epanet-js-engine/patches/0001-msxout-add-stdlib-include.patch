@@ -1,0 +1,7 @@
+--- a/src/solver/msxout.c
++++ b/src/solver/msxout.c
+@@ -1,3 +1,4 @@
++#include <stdlib.h>
+ /******************************************************************************
+ **  MODULE:        MSXOUT.C
+ **  PROJECT:       EPANET-MSX

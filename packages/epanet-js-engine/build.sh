@@ -44,27 +44,11 @@ echo "  -> Done."
 
 # Step 4: Apply patches
 echo "[4/5] Applying patches..."
-
-# Patch 4.1: Add #include <stdlib.h> to msxout.c
-MSXOUT_FILE="EPANETMSX/src/solver/msxout.c"
-echo "  -> Patching ${MSXOUT_FILE}..."
-if [ -f "${MSXOUT_FILE}" ]; then
-    # Add #include <stdlib.h> at the top of the file
-    sed -i '1i #include <stdlib.h>' "${MSXOUT_FILE}"
-    echo "     Added #include <stdlib.h> to top of file."
-else
-    echo "     ERROR: ${MSXOUT_FILE} not found!"
-    exit 1
-fi
-
-MSXQUAL_FILE="EPANETMSX/src/solver/msxqual.c"
-echo "  -> Patching ${MSXQUAL_FILE}..."
-if [ -f "${MSXQUAL_FILE}" ]; then
-    sed -i 's/^const double Q_STAGNANT/static const double Q_STAGNANT/' "${MSXQUAL_FILE}"
-else
-    echo "     ERROR: ${MSXQUAL_FILE} not found!"
-    exit 1
-fi
+PATCHES_DIR="$(cd .. && pwd)/patches"
+for patch in "${PATCHES_DIR}"/*.patch; do
+    echo "  -> Applying $(basename ${patch})..."
+    git -C EPANETMSX apply "${patch}"
+done
 
 # Step 5: Build with Emscripten
 echo "[5/5] Building with Emscripten..."
