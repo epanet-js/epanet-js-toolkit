@@ -46,7 +46,7 @@ set_target_properties(epanetmsx-js PROPERTIES
         -s FILESYSTEM=1 \
         -s FORCE_FILESYSTEM=1 \
         -s EXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap','allocateUTF8','UTF8ToString','getValue','setValue'] \
-        -s EXPORTED_FUNCTIONS=['_malloc','_free'] \
+        -s EXPORTED_FUNCTIONS=@${CMAKE_CURRENT_BINARY_DIR}/exports.json \
         -s NO_EXIT_RUNTIME=1 \
         -s ASSERTIONS=0 \
         -msimd128 \
