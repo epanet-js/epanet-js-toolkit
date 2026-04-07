@@ -1,3 +1,5 @@
 build/
 .claude/
 lib/
+node_modules/
+dist/

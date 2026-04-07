@@ -1,0 +1,43 @@
+{
+  "name": "epanet-engine",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c && cp src/index.d.ts dist/index.d.ts && cp -r lib/. dist/",
+    "prepublishOnly": "npm run build"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./v2.2":       "./dist/v2.2/EpanetEngine.js",
+    "./v2.2-msx":   "./dist/v2.2-msx/EpanetEngine.js",
+    "./v2.3":       "./dist/v2.3/EpanetEngine.js",
+    "./v2.3-msx":   "./dist/v2.3-msx/EpanetEngine.js",
+    "./v2.3.1":     "./dist/v2.3.1/EpanetEngine.js",
+    "./v2.3.1-msx": "./dist/v2.3.1-msx/EpanetEngine.js",
+    "./v2.3.2":     "./dist/v2.3.2/EpanetEngine.js",
+    "./v2.3.2-msx": "./dist/v2.3.2-msx/EpanetEngine.js",
+    "./v2.3.3":     "./dist/v2.3.3/EpanetEngine.js",
+    "./v2.3.3-msx": "./dist/v2.3.3-msx/EpanetEngine.js",
+    "./v2.3.4":     "./dist/v2.3.4/EpanetEngine.js",
+    "./v2.3.4-msx": "./dist/v2.3.4-msx/EpanetEngine.js",
+    "./v2.3.5":     "./dist/v2.3.5/EpanetEngine.js",
+    "./v2.3.5-msx": "./dist/v2.3.5-msx/EpanetEngine.js",
+    "./master":     "./dist/master/EpanetEngine.js",
+    "./master-msx": "./dist/master-msx/EpanetEngine.js",
+    "./dev":        "./dist/dev/EpanetEngine.js",
+    "./dev-msx":    "./dist/dev-msx/EpanetEngine.js"
+  },
+  "devDependencies": {
+    "rollup": "^4.0.0"
+  }
+}
