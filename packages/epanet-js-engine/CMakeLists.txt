@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(epanetmsx_wasm LANGUAGES C CXX)
+project(EpanetEngine LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,19 +10,19 @@ add_subdirectory(wasm/epanet)
 add_subdirectory(wasm/epanet-msx)
 
 # Create WASM module
-add_executable(epanetmsx-js
+add_executable(EpanetEngine
     bindings/epanetmsx.cpp
 )
 
 if(INCLUDE_MSX)
-    target_compile_definitions(epanetmsx-js PRIVATE INCLUDE_MSX)
-    target_link_libraries(epanetmsx-js epanetmsx epanet2)
+    target_compile_definitions(EpanetEngine PRIVATE INCLUDE_MSX)
+    target_link_libraries(EpanetEngine epanetmsx epanet2)
 else()
-    target_link_libraries(epanetmsx-js epanet2)
+    target_link_libraries(EpanetEngine epanet2)
 endif()
 
 
-target_include_directories(epanetmsx-js PRIVATE
+target_include_directories(EpanetEngine PRIVATE
     ${CMAKE_SOURCE_DIR}/EPANETMSX/src/solver/include
     ${CMAKE_SOURCE_DIR}/EPANETMSX/src/solver
     ${CMAKE_SOURCE_DIR}/EPANET/include
@@ -33,12 +33,12 @@ target_include_directories(epanetmsx-js PRIVATE
 )
 
 # Emscripten linker flags for epanet-js compatible module
-set_target_properties(epanetmsx-js PROPERTIES
+set_target_properties(EpanetEngine PROPERTIES
     LINK_FLAGS "\
         -s WASM=1 \
         -s MODULARIZE=1 \
         -s EXPORT_ES6=1 \
-        -s EXPORT_NAME='EpanetMSXEngine' \
+        -s EXPORT_NAME='EpanetEngine' \
         -s ENVIRONMENT=web \
         -s ALLOW_MEMORY_GROWTH=1 \
         -s ASSERTIONS=0 \
