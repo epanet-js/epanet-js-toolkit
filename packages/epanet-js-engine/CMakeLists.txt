@@ -18,9 +18,8 @@ if(INCLUDE_MSX)
     target_compile_definitions(EpanetEngine PRIVATE INCLUDE_MSX)
     target_link_libraries(EpanetEngine epanetmsx epanet2)
 else()
-    target_link_libraries(EpanetEngine epanet)
+    target_link_libraries(EpanetEngine epanet2)
 endif()
-
 
 target_include_directories(EpanetEngine PRIVATE
     ${CMAKE_SOURCE_DIR}/EPANETMSX/src/solver/include
@@ -35,7 +34,6 @@ target_include_directories(EpanetEngine PRIVATE
 # Emscripten linker flags for epanet-js compatible module
 set_target_properties(EpanetEngine PROPERTIES
     LINK_FLAGS "\
-        -02 \
         -s WASM=1 \
         -s MODULARIZE=1 \
         -s EXPORT_ES6=1 \
@@ -51,7 +49,6 @@ set_target_properties(EpanetEngine PROPERTIES
         -s NO_EXIT_RUNTIME=1 \
         --no-entry \
         -msimd128 \
-        --closure 0 \
-        --bind
+        --closure 0
     "
 )

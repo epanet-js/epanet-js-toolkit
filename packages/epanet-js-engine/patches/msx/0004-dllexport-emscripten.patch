@@ -1,0 +1,13 @@
+diff --git a/src/solver/include/epanetmsx.h b/src/solver/include/epanetmsx.h
+index 67db53d..1bc1aa5 100644
+--- a/src/solver/include/epanetmsx.h
++++ b/src/solver/include/epanetmsx.h
+@@ -23,6 +23,8 @@
+ #endif
+ #elif defined(__CYGWIN__)
+ #define MSXDLLEXPORT __stdcall
++#elif defined (__EMSCRIPTEN__)
++#define MSXDLLEXPORT __attribute__((used, visibility("default")))
+ #else
+ #define MSXDLLEXPORT
+ #endif
