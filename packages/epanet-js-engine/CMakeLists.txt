@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
-project(EpanetEngine LANGUAGES C CXX)
+project(EpanetEngine LANGUAGES C)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXECUTABLE_SUFFIX ".js")
 
 # Build libraries
@@ -11,14 +11,14 @@ add_subdirectory(wasm/epanet-msx)
 
 # Create WASM module
 add_executable(EpanetEngine
-    bindings/epanetmsx.cpp
+    bindings/epanetmsx.c
 )
 
 if(INCLUDE_MSX)
     target_compile_definitions(EpanetEngine PRIVATE INCLUDE_MSX)
     target_link_libraries(EpanetEngine epanetmsx epanet2)
 else()
-    target_link_libraries(EpanetEngine epanet2)
+    target_link_libraries(EpanetEngine epanet)
 endif()
 
 
@@ -35,6 +35,7 @@ target_include_directories(EpanetEngine PRIVATE
 # Emscripten linker flags for epanet-js compatible module
 set_target_properties(EpanetEngine PROPERTIES
     LINK_FLAGS "\
+        -02 \
         -s WASM=1 \
         -s MODULARIZE=1 \
         -s EXPORT_ES6=1 \
@@ -48,10 +49,9 @@ set_target_properties(EpanetEngine PROPERTIES
         -s EXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap','allocateUTF8','UTF8ToString','getValue','setValue'] \
         -s EXPORTED_FUNCTIONS=@${CMAKE_CURRENT_BINARY_DIR}/exports.json \
         -s NO_EXIT_RUNTIME=1 \
-        -s ASSERTIONS=0 \
+        --no-entry \
         -msimd128 \
         --closure 0 \
-        --bind \
-        -lembind \
+        --bind
     "
 )
