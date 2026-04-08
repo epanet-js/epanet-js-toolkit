@@ -1,0 +1,13 @@
+diff --git a/src/solver/msxtoolkit.c b/src/solver/msxtoolkit.c
+index f809abd..1a3ccb6 100644
+--- a/src/solver/msxtoolkit.c
++++ b/src/solver/msxtoolkit.c
+@@ -36,7 +36,7 @@ extern MSXproject  MSX;                // MSX project data
+ //  Imported functions
+ //--------------------
+ int    MSXproj_open(char *fname);
+-int    MSXproj_close(void);
++void    MSXproj_close(void);
+ int    MSXproj_addObject(int type, char *id, int n);
+ int    MSXproj_findObject(int type, char *id);
+ char * MSXproj_findID(int type, char *id);
