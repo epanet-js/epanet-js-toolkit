@@ -186,7 +186,7 @@ public:
     // ==========================================
 
     void msxOpen(const std::string& msxFile) {
-        int err = MSXopen((char *)msxFile.c_str());
+        int err = MSXopen(enProject, (char *)msxFile.c_str());
         checkError(err, "msxOpen");
         isMsxOpen = true;
     }
