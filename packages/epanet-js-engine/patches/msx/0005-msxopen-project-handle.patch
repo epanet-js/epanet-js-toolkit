@@ -1,0 +1,19 @@
+diff --git a/src/solver/msxtoolkit.c b/src/solver/msxtoolkit.c
+index 1999d04..ea170d2 100644
+--- a/src/solver/msxtoolkit.c
++++ b/src/solver/msxtoolkit.c
+@@ -98,11 +98,12 @@ int  MSXDLLEXPORT  MSXopen(EN_Project ph, char *fname)
+ {
+     int err = 0;
+     if (MSX.ProjectOpened) return(ERR_MSX_OPENED);
++    
++    MSX.ProjectHandle = ph;
++
+     CALL(err, MSXproj_open(fname));
+     CALL(err, MSXqual_open());
+ 
+-    MSX.ProjectHandle = ph;
+-
+     if ( err )
+     {
+         EN_writeline(MSX.ProjectHandle, MSXproj_getErrmsg(err));
