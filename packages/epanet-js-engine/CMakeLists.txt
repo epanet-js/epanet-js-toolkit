@@ -49,6 +49,5 @@ set_target_properties(EpanetEngine PROPERTIES
         -s NO_EXIT_RUNTIME=1 \
         --no-entry \
         -msimd128 \
-        --closure 0
-    "
+        --closure 0"
 )
