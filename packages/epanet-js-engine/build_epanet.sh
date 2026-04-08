@@ -48,8 +48,16 @@ git clone --depth 1 https://github.com/USEPA/EPANETMSX EPANETMSX
 echo "  -> Done."
 
 # Step 4: Apply patches
-echo "[4/6] Applying patches..."
-PATCHES_DIR="${SCRIPT_DIR}/patches"
+echo "[4/6] Applying EPANET patches..."
+PATCHES_DIR="${SCRIPT_DIR}/patches/epanet"
+for patch in "${PATCHES_DIR}"/*.patch; do
+    echo "  -> Applying $(basename ${patch})..."
+    git -C EPANET apply --whitespace=fix --reject "${patch}"
+    git -C EPANET add .
+    git -C EPANET commit -m "epanet-js patch ${patch}"
+done
+
+PATCHES_DIR="${SCRIPT_DIR}/patches/msx"
 for patch in "${PATCHES_DIR}"/*.patch; do
     echo "  -> Applying $(basename ${patch})..."
     git -C EPANETMSX apply --whitespace=fix --reject "${patch}"
