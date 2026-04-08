@@ -52,7 +52,7 @@ echo "[4/6] Applying EPANET patches..."
 PATCHES_DIR="${SCRIPT_DIR}/patches/epanet"
 for patch in "${PATCHES_DIR}"/*.patch; do
     echo "  -> Applying $(basename ${patch})..."
-    git -C EPANET apply --whitespace=fix --reject "${patch}"
+    git -C EPANET apply --whitespace=fix "${patch}"
     git -C EPANET add .
     git -C EPANET commit -m "epanet-js patch ${patch}"
 done
@@ -60,7 +60,7 @@ done
 PATCHES_DIR="${SCRIPT_DIR}/patches/msx"
 for patch in "${PATCHES_DIR}"/*.patch; do
     echo "  -> Applying $(basename ${patch})..."
-    git -C EPANETMSX apply --whitespace=fix --reject "${patch}"
+    git -C EPANETMSX apply --whitespace=fix "${patch}"
     git -C EPANETMSX add .
     git -C EPANETMSX commit -m "epanet-js patch ${patch}"
 done
