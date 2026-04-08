@@ -32,8 +32,12 @@ target_include_directories(EpanetEngine PRIVATE
 )
 
 # Emscripten linker flags for epanet-js compatible module
+# FIXME: Only add debugging flags on debug builds
 set_target_properties(EpanetEngine PROPERTIES
     LINK_FLAGS "\
+        --profiling-funcs \
+        -s ASSERTIONS=2 \
+        -s STACK_OVERFLOW_CHECK=2 \
         -s WASM=1 \
         -s MODULARIZE=1 \
         -s EXPORT_ES6=1 \
