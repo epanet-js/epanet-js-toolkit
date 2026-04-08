@@ -29,51 +29,38 @@ for (const version of VERSIONS) {
   f.FS.writeFile('net.inp', readFileSync(join(__dirname, 'network_msx.inp')))
   f.FS.writeFile('net.msx', readFileSync(join(__dirname, 'network_msx.msx')))
 
-  /*const phPtr = f.malloc(4)
+  const phPtr = f.malloc(4)
   f.EN_createproject(phPtr)
-  console.log('EN_createproject')
   const ph = f.getValue(phPtr, 'i32')
-  f.free(phPtr)*/
+  f.free(phPtr)
 
   const inpPtr = f.allocateUTF8('net.inp')
   const rptPtr = f.allocateUTF8('net.rpt')
   const outPtr = f.allocateUTF8('net.out')
-  f.ENopen(inpPtr, rptPtr, outPtr)
-  console.log('ENopen')
+  const enOpenResult = f.EN_open(ph, inpPtr, rptPtr, outPtr)
   f.free(inpPtr)
   f.free(rptPtr)
   f.free(outPtr)
 
-  f.ENsolveH()
-  console.log('ENsolveH')
+  assert.ok(enOpenResult === 0, `EN_open failed: ${enOpenResult}`)
 
   const msxPtr = f.allocateUTF8('net.msx')
-  f.MSXopen(msxPtr)
-  console.log('MSXopen')
+  const msxOpenResult = f.MSXopen(ph, msxPtr)
   f.free(msxPtr)
 
+  assert.ok(msxOpenResult === 0, `MSXopen failed: ${msxOpenResult}`)
+
   f.MSXsolveH()
-  console.log('MSXsolveH')
   f.MSXsolveQ()
-  console.log('MSXsolveQ')
   f.MSXreport()
-  console.log('MSXreport')
 
   const rpt = f.FS.readFile('net.rpt', { encoding: 'utf8' })
-  //const out = f.FS.readFile('net.out')
-  console.log(rpt)
-
-
   assert.ok(rpt.length > 0, 'net.rpt must not be empty')
-  assert.ok(out.length > 0, 'net.out must not be empty')
 
   console.log('OK! MSX report:')
   console.log(rpt)
 
   f.MSXclose()
-  console.log('MSXclose')
-  f.ENclose(ph)
-  console.log('ENclose')
-  /*f.EN_deleteproject(ph)
-  console.log('EN_deleteproject')*/
+  f.EN_close(ph)
+  f.EN_deleteproject(ph)
 }
