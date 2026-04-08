@@ -1,0 +1,30 @@
+diff --git a/include/epanet2_2.h b/include/epanet2_2.h
+index cbfece3..194d5b2 100644
+--- a/include/epanet2_2.h
++++ b/include/epanet2_2.h
+@@ -18,23 +18,8 @@
+ #ifndef EPANET2_2_H
+ #define EPANET2_2_H
+ 
+-#ifdef epanet_py_EXPORTS
+-  #define DLLEXPORT
+-#else
+-  #ifndef DLLEXPORT
+-    #ifdef _WIN32
+-      #ifdef epanet2_EXPORTS
+-        #define DLLEXPORT __declspec(dllexport) __stdcall
+-      #else
+-        #define DLLEXPORT __declspec(dllimport) __stdcall
+-      #endif
+-    #elif defined(__CYGWIN__)
+-      #define DLLEXPORT __stdcall
+-    #else
+-      #define DLLEXPORT
+-    #endif
+-  #endif
+-#endif
++#include <emscripten.h>
++#define DLLEXPORT EMSCRIPTEN_KEEPALIVE
+ 
+ #include "epanet2_enums.h"
+ 
