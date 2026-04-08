@@ -1,0 +1,26 @@
+diff --git a/src/solver/include/epanetmsx.h b/src/solver/include/epanetmsx.h
+index 67db53d..1731bac 100644
+--- a/src/solver/include/epanetmsx.h
++++ b/src/solver/include/epanetmsx.h
+@@ -14,19 +14,8 @@
+ #ifndef EPANETMSX_H
+ #define EPANETMSX_H
+ 
+-#ifndef MSXDLLEXPORT
+-#ifdef _WIN32
+-#ifdef epanetmsx_EXPORTS
+-#define MSXDLLEXPORT __declspec(dllexport) __stdcall
+-#else
+-#define MSXDLLEXPORT __declspec(dllimport) __stdcall
+-#endif
+-#elif defined(__CYGWIN__)
+-#define MSXDLLEXPORT __stdcall
+-#else
+-#define MSXDLLEXPORT
+-#endif
+-#endif
++#include <emscripten.h>
++#define DLLEXPORT EMSCRIPTEN_KEEPALIVE
+ 
+ // --- Declare the EPANETMSX toolkit functions
+ #if defined(__cplusplus)
