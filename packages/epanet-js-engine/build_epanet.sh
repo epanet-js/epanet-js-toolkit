@@ -4,17 +4,19 @@
 # This script clones the repositories, applies necessary patches, and builds with emcmake
 #
 # Usage:
-#   ./build.sh [enable_msx] [--epanet-tag=<tag>]
+#   ./build.sh [--enable_msx] [--epanet-tag=<tag>] [--debug]
 
 set -e  # Exit on any error
 
 # Configuration
 EPANET_TAG="${EPANET_TAG:-v2.3.5}"
 ENABLE_MSX=0
+BUILD_TYPE="Release"
 for arg in "$@"; do
     case "$arg" in
-        enable_msx)        ENABLE_MSX=1 ;;
+        --enable_msx)        ENABLE_MSX=1 ;;
         --epanet-tag=*)    EPANET_TAG="${arg#--epanet-tag=}" ;;
+        --debug)           BUILD_TYPE="Debug" ;;
     esac
 done
 
@@ -25,6 +27,7 @@ echo "EPANET + EPANETMSX Emscripten Build Script"
 echo "=========================================="
 echo "EPANET Tag: ${EPANET_TAG}"
 echo "Enable MSX: ${ENABLE_MSX}"
+echo "Build Type: ${BUILD_TYPE}"
 echo ""
 
 # Step 1: Create build directory
@@ -86,8 +89,8 @@ echo "  -> Done."
 
 # Step 6: Build with Emscripten
 echo "[6/6] Building with Emscripten..."
-CMAKE_ARGS=""
-[ "$ENABLE_MSX" = "1" ] && CMAKE_ARGS="-DINCLUDE_MSX=1"
+CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
+[ "$ENABLE_MSX" = "1" ] && CMAKE_ARGS="${CMAKE_ARGS} -DINCLUDE_MSX=1"
 echo "  -> Running emcmake cmake .."
 emcmake cmake $CMAKE_ARGS ..
 echo "  -> Running make -j8"

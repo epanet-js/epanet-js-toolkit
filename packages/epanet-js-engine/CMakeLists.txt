@@ -32,19 +32,28 @@ target_include_directories(EpanetEngine PRIVATE
 )
 
 # Emscripten linker flags for epanet-js compatible module
-# FIXME: Only add debugging flags on debug builds
-set_target_properties(EpanetEngine PROPERTIES
-    LINK_FLAGS "\
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(BUILD_TYPE_LINK_FLAGS "\
+        -O0 \
+        -g \
         --profiling-funcs \
         -s ASSERTIONS=2 \
-        -s STACK_OVERFLOW_CHECK=2 \
+        -s STACK_OVERFLOW_CHECK=2")
+else()
+    set(BUILD_TYPE_LINK_FLAGS "\
+        -O2 \
+        -s ASSERTIONS=0")
+endif()
+
+set_target_properties(EpanetEngine PROPERTIES
+    LINK_FLAGS "\
+        ${BUILD_TYPE_LINK_FLAGS} \
         -s WASM=1 \
         -s MODULARIZE=1 \
         -s EXPORT_ES6=1 \
         -s EXPORT_NAME='EpanetEngine' \
         -s ENVIRONMENT=web \
         -s ALLOW_MEMORY_GROWTH=1 \
-        -s ASSERTIONS=0 \
         -s SINGLE_FILE=0 \
         -s FILESYSTEM=1 \
         -s FORCE_FILESYSTEM=1 \
