@@ -5,7 +5,7 @@
 # Usage:
 #   ./generate_exports.sh <header> [include_dir]
 #
-# Requires: clang, jq, python3
+# Requires: clang, jq, node
 
 set -eo pipefail
 
@@ -14,7 +14,7 @@ if [ $# -lt 1 ] || [ $# -gt 2 ]; then
     exit 1
 fi
 
-for cmd in clang jq python3; do
+for cmd in clang jq node; do
     if ! command -v "$cmd" &>/dev/null; then
         echo "error: required command not found: $cmd" >&2
         exit 1
@@ -52,29 +52,32 @@ clang -x c -w -fsyntax-only \
 
 # Steps 3 & 4: recursively walk the AST, collect every FunctionDecl, and
 # extract its name from syms_pp.c using the offset + tokLen fields.
-cat > "$dir/extract.py" << 'PYEOF'
-import sys, json
+cat > "$dir/extract.js" << 'JSEOF'
+import * as fs from "fs";
+const [,, astFile, ppFile] = process.argv;
 
-def walk(node, header, src, results):
-    if not isinstance(node, dict):
-        return
-    loc = node.get('loc', {})
-    if node.get('kind') == 'FunctionDecl':
-        offset, toklen = loc.get('offset'), loc.get('tokLen')
-        if offset is not None and toklen is not None:
-            results.append(src[offset:offset + toklen].decode())
-    for child in node.get('inner', []):
-        walk(child, header, src, results)
+const src = fs.readFileSync(ppFile);
+const ast = JSON.parse(fs.readFileSync(astFile, 'utf8'));
+const results = [];
 
-ast_file, pp_file, header_name = sys.argv[1], sys.argv[2], sys.argv[3]
-src = open(pp_file, 'rb').read()
-results = []
-ast = json.load(open(ast_file))
-walk(ast, header_name, src, results)
-print(json.dumps(results))
-PYEOF
+function walk(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.kind === 'FunctionDecl') {
+        const { offset, tokLen } = node.loc || {};
+        if (offset != null && tokLen != null) {
+            results.push(src.slice(offset, offset + tokLen).toString());
+        }
+    }
+    for (const child of node.inner || []) {
+        walk(child);
+    }
+}
 
-functions=$(python3 "$dir/extract.py" "$dir/syms_ast.json" "$dir/syms_pp.c" "$name")
+walk(ast);
+console.log(JSON.stringify(results));
+JSEOF
+
+functions=$(node "$dir/extract.js" "$dir/syms_ast.json" "$dir/syms_pp.c")
 
 # Prefix each symbol with _ (Emscripten C-symbol convention) and append the
 # required runtime allocator symbols.
