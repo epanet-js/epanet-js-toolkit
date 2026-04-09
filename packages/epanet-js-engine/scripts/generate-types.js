@@ -80,12 +80,20 @@ for (const fn of functions) {
 
 interfaceLines.push('}');
 
+// --- enums/index.ts ---
+
+const enumIndexLines = [];
+for (const enumName of enumNames) {
+  enumIndexLines.push(`export { ${enumName} } from './${enumName}';`);
+}
+enumIndexLines.push('');
+
+writeFileSync(join(enumsDir, 'index.ts'), enumIndexLines.join('\n'));
+
 // --- index.ts ---
 
 const indexLines = [];
-for (const enumName of enumNames) {
-  indexLines.push(`export { ${enumName} } from './enums/${enumName}';`);
-}
+if (enumNames.length > 0) indexLines.push(`export * from './enums';`);
 if (enumNames.length > 0) indexLines.push('');
 indexLines.push(...interfaceLines);
 indexLines.push('');
