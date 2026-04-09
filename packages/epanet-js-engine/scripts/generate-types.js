@@ -20,7 +20,8 @@ function stripPrefix(name) {
 }
 
 const outDir = './build/types';
-mkdirSync(outDir, { recursive: true });
+const enumsDir = join(outDir, 'enums');
+mkdirSync(enumsDir, { recursive: true });
 
 // --- Enums ---
 
@@ -28,7 +29,7 @@ const enumNames = [];
 
 for (const { name, values } of enums) {
   const shortName = stripPrefix(name);
-  const enumDir = join(outDir, shortName);
+  const enumDir = join(enumsDir, shortName);
   mkdirSync(enumDir, { recursive: true });
 
   const lines = [];
@@ -83,7 +84,7 @@ interfaceLines.push('}');
 
 const indexLines = [];
 for (const enumName of enumNames) {
-  indexLines.push(`export { ${enumName} } from './${enumName}';`);
+  indexLines.push(`export { ${enumName} } from './enums/${enumName}';`);
 }
 if (enumNames.length > 0) indexLines.push('');
 indexLines.push(...interfaceLines);
