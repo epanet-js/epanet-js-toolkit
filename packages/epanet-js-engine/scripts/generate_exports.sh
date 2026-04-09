@@ -42,7 +42,7 @@ mkdir -p "$dir"
 # Step 1: write a translation unit that includes the header and run it
 # through the preprocessor to produce a fully macro-expanded source file.
 printf '#include "%s"\n' "$HEADER" > "$dir/syms.c"
-clang -E -x c ${INCLUDE_FLAG:+"$INCLUDE_FLAG"} "$dir/syms.c" -o "$dir/syms_pp.c"
+clang -E -C -x c ${INCLUDE_FLAG:+"$INCLUDE_FLAG"} "$dir/syms.c" -o "$dir/syms_pp.c"
 
 # Step 2: generate the AST JSON from the preprocessed source.
 clang -x c -w -fsyntax-only \
