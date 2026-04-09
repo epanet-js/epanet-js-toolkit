@@ -19,7 +19,7 @@ function stripPrefix(name) {
   return name.startsWith('EN_') ? name.slice(3) : name;
 }
 
-const outDir = join(join('./lib', version), 'types');
+const outDir = './build/types';
 mkdirSync(outDir, { recursive: true });
 
 // --- Enums ---

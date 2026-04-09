@@ -35,8 +35,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK_DIR="${SCRIPT_DIR}/build"
 
-name="$(basename "$HEADER")"
-dir="$WORK_DIR/$(echo "$name" | tr '.' '_')"
+dir="$WORK_DIR/ast"
 mkdir -p "$dir"
 
 # Step 1: write a translation unit that includes the header and run it

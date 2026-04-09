@@ -36,11 +36,13 @@ for version in "${VERSIONS[@]}"; do
     bash "$BUILD_EPANET" "--epanet-tag=${version}"
     cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/lib/${version}/"
     cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/lib/${version}/"
+    cp -r "${PROJECT_DIR}/build/types" "${PROJECT_DIR}/lib/${version}/"
 
     echo "[2/2] EPANET + MSX..."
     bash "$BUILD_EPANET" "--epanet-tag=${version}" --enable_msx
     cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/lib/${version}-msx/"
     cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/lib/${version}-msx/"
+    cp -r "${PROJECT_DIR}/build/types" "${PROJECT_DIR}/lib/${version}-msx/"
 
     echo "  -> ${version} done."
 done
