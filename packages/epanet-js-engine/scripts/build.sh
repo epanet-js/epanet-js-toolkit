@@ -13,14 +13,14 @@ BUILD_EPANET="${PROJECT_DIR}/scripts/build_epanet.sh"
 
 VERSIONS=(
     v2.2
-    # v2.3
-    # v2.3.1
-    # v2.3.2
-    # v2.3.3
-    # v2.3.4
-    # v2.3.5
-    # master
-    # dev
+    v2.3
+    v2.3.1
+    v2.3.2
+    v2.3.3
+    v2.3.4
+    v2.3.5
+    master
+    dev
 )
 
 for version in "${VERSIONS[@]}"; do
