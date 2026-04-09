@@ -32,7 +32,7 @@ if [ ! -f "$HEADER" ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK_DIR="${SCRIPT_DIR}/build"
 
 name="$(basename "$HEADER")"

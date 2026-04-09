@@ -20,7 +20,7 @@ for arg in "$@"; do
     esac
 done
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "=========================================="
 echo "EPANET + EPANETMSX Emscripten Build Script"
@@ -52,7 +52,7 @@ echo "  -> Done."
 
 # Step 4: Apply patches
 echo "[4/6] Applying EPANET patches..."
-PATCHES_DIR="${SCRIPT_DIR}/patches/epanet"
+PATCHES_DIR="${PROJECT_DIR}/patches/epanet"
 for patch in "${PATCHES_DIR}"/*.patch; do
     echo "  -> Applying $(basename ${patch})..."
     git -C EPANET apply --whitespace=fix "${patch}"
@@ -60,7 +60,7 @@ for patch in "${PATCHES_DIR}"/*.patch; do
     git -C EPANET commit -m "epanet-js patch ${patch}"
 done
 
-PATCHES_DIR="${SCRIPT_DIR}/patches/msx"
+PATCHES_DIR="${PROJECT_DIR}/patches/msx"
 for patch in "${PATCHES_DIR}"/*.patch; do
     echo "  -> Applying $(basename ${patch})..."
     git -C EPANETMSX apply --whitespace=fix "${patch}"
@@ -71,7 +71,7 @@ echo "  -> Done."
 
 # Step 5: Generate Emscripten exports
 echo "[5/6] Generating exports..."
-GENERATE_EXPORTS="${SCRIPT_DIR}/generate_exports.sh"
+GENERATE_EXPORTS="${PROJECT_DIR}/scripts/generate_exports.sh"
 
 epanet_exports=$(bash "$GENERATE_EXPORTS" EPANET/include/epanet2_2.h)
 echo "  -> EPANET exports generated."

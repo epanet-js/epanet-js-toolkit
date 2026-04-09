@@ -8,19 +8,19 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BUILD_EPANET="${SCRIPT_DIR}/build_epanet.sh"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOºURCE[0]}")" && pwd)"
+BUILD_EPANET="${PROJECT_DIR}/scripts/build_epanet.sh"
 
 VERSIONS=(
     v2.2
-    v2.3
-    v2.3.1
-    v2.3.2
-    v2.3.3
-    v2.3.4
-    v2.3.5
-    master
-    dev
+    # v2.3
+    # v2.3.1
+    # v2.3.2
+    # v2.3.3
+    # v2.3.4
+    # v2.3.5
+    # master
+    # dev
 )
 
 for version in "${VERSIONS[@]}"; do
@@ -29,18 +29,18 @@ for version in "${VERSIONS[@]}"; do
     echo "Building EPANET ${version}"
     echo "=========================================="
 
-    mkdir -p "${SCRIPT_DIR}/lib/${version}"
-    mkdir -p "${SCRIPT_DIR}/lib/${version}-msx"
+    mkdir -p "${PROJECT_DIR}/lib/${version}"
+    mkdir -p "${PROJECT_DIR}/lib/${version}-msx"
 
     echo "[1/2] EPANET only..."
     bash "$BUILD_EPANET" "--epanet-tag=${version}"
-    cp "${SCRIPT_DIR}/build/EpanetEngine.js"   "${SCRIPT_DIR}/lib/${version}/"
-    cp "${SCRIPT_DIR}/build/EpanetEngine.wasm" "${SCRIPT_DIR}/lib/${version}/"
+    cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/lib/${version}/"
+    cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/lib/${version}/"
 
     echo "[2/2] EPANET + MSX..."
-    bash "$BUILD_EPANET" "--epanet-tag=${version}" enable_msx
-    cp "${SCRIPT_DIR}/build/EpanetEngine.js"   "${SCRIPT_DIR}/lib/${version}-msx/"
-    cp "${SCRIPT_DIR}/build/EpanetEngine.wasm" "${SCRIPT_DIR}/lib/${version}-msx/"
+    bash "$BUILD_EPANET" "--epanet-tag=${version}" --enable_msx
+    cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/lib/${version}-msx/"
+    cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/lib/${version}-msx/"
 
     echo "  -> ${version} done."
 done
