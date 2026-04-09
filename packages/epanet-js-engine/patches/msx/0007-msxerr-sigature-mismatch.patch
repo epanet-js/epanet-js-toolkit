@@ -1,0 +1,13 @@
+diff --git a/src/solver/msxqual.c b/src/solver/msxqual.c
+index f5125ca..d47e3bd 100644
+--- a/src/solver/msxqual.c
++++ b/src/solver/msxqual.c
+@@ -65,7 +65,7 @@ int    MSXout_saveFinalResults(void);
+ 
+ void   MSXerr_clearMathError(void);                                            
+ int    MSXerr_mathError(void);                                                 
+-char*  MSXerr_writeMathErrorMsg(void);                                         
++void  MSXerr_writeMathErrorMsg(void);                                         
+ 
+ //  Exported functions
+ //--------------------
