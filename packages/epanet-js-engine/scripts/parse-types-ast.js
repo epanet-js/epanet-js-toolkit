@@ -1,8 +1,11 @@
 import { readFileSync } from "fs";
 
-const ast = JSON.parse(
-  readFileSync('./build/epanet2_2_h/syms_ast.json')
-);
+const astFile = process.argv[2];
+if (!astFile) {
+  process.stderr.write('usage: parse-types-ast.js <ast-json>\n');
+  process.exit(1);
+}
+const ast = JSON.parse(readFileSync(astFile, 'utf8'));
 
 function walk(node, cb) {
   cb(node);
