@@ -107,9 +107,10 @@ writeFileSync(join(outDir, 'index.d.ts'), indexLines.join('\n'));
 // loader<T>() propagate the full API surface to callers.
 
 const wrapperLines = [
+  `import type { EpanetEngine } from './types/index';`,
   `export type { EpanetEngine } from './types/index';`,
-  `declare const factory: (options?: object) => Promise<import('./types/index').EpanetEngine>;`,
-  `export default factory;`,
+  `declare function EpanetEngineFactory(moduleArg?: object): Promise<EpanetEngine>;`,
+  `export default EpanetEngineFactory;`,
   '',
 ];
 
