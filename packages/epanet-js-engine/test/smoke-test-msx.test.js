@@ -100,10 +100,16 @@ it.each(VERSIONS)('EPANET-MSX %s allows injecting hydraulics results file from E
   f.MSXsolveQ()
   f.MSXreport()
 
+  const msxOutPtr = f.allocateUTF8('msxout.bin')
+  f.MSXsaveoutfile(msxOutPtr)
+  f.free(msxOutPtr)
+
   const rpt = f.FS.readFile('net.rpt', { encoding: 'utf8' })
   const msxRpt = f.FS.readFile('msxreport.txt', { encoding: 'utf8' })
+  const msxBin = f.FS.readFile('msxout.bin')
   expect(rpt.length, 'net.rpt must not be empty').toBeGreaterThan(0)
   expect(msxRpt.length, 'msxreport.txt must not be empty').toBeGreaterThan(0)
+  expect(msxBin.length, 'msxout.bin must not be empty').toBeGreaterThan(0)
 
   f.MSXclose()
   f.EN_close(ph)
