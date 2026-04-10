@@ -53,7 +53,9 @@ it.each(VERSIONS)('EPANET-MSX %s produces correct simulation results', async (ve
   f.MSXreport()
 
   const rpt = f.FS.readFile('net.rpt', { encoding: 'utf8' })
+  const msxRpt = f.FS.readFile('msxreport.txt', { encoding: 'utf8' })
   expect(rpt.length, 'net.rpt must not be empty').toBeGreaterThan(0)
+  expect(msxRpt.length, 'msxreport.txt must not be empty').toBeGreaterThan(0)
 
   f.MSXclose()
   f.EN_close(ph)
