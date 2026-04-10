@@ -108,7 +108,7 @@ writeFileSync(join(outDir, 'index.d.ts'), indexLines.join('\n'));
 
 const wrapperLines = [
   `import type { EpanetEngine } from './types/index';`,
-  `export type { EpanetEngine } from './types/index';`,
+  `export * from './types/index';`,
   `declare function EpanetEngineFactory(moduleArg?: object): Promise<EpanetEngine>;`,
   `export default EpanetEngineFactory;`,
   '',
