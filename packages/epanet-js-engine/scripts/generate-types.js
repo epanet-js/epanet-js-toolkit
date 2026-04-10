@@ -33,7 +33,7 @@ for (const { name, values } of enums) {
   mkdirSync(enumDir, { recursive: true });
 
   const lines = [];
-  lines.push(`export enum ${shortName} {`);
+  lines.push(`export declare enum ${shortName} {`);
   for (const { name: valName, value, comment } of values) {
     const shortValName = stripPrefix(valName);
     const inlineComment = comment ? ` //!<${comment}` : '';
@@ -42,7 +42,7 @@ for (const { name, values } of enums) {
   lines.push('}');
   lines.push('');
 
-  writeFileSync(join(enumDir, 'index.ts'), lines.join('\n'));
+  writeFileSync(join(enumDir, 'index.d.ts'), lines.join('\n'));
   enumNames.push(shortName);
 }
 
@@ -88,7 +88,7 @@ for (const enumName of enumNames) {
 }
 enumIndexLines.push('');
 
-writeFileSync(join(enumsDir, 'index.ts'), enumIndexLines.join('\n'));
+writeFileSync(join(enumsDir, 'index.d.ts'), enumIndexLines.join('\n'));
 
 // --- index.ts ---
 
@@ -98,4 +98,4 @@ if (enumNames.length > 0) indexLines.push('');
 indexLines.push(...interfaceLines);
 indexLines.push('');
 
-writeFileSync(join(outDir, 'index.ts'), indexLines.join('\n'));
+writeFileSync(join(outDir, 'index.d.ts'), indexLines.join('\n'));
