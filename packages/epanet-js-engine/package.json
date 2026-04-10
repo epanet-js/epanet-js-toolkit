@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "./scripts/build.sh && rollup -c && cp src/index.d.ts dist/index.d.ts && cp -r lib/. dist/",
-    "test": "node test/smoke-test.js && node test/smoke-test-msx.js",
+    "test": "vitest run",
     "prepublishOnly": "npm run build",
     "clean": "rm -rf build dist lib"
   },
@@ -40,6 +40,7 @@
     "./dev-msx":    { "import": "./dist/dev-msx/EpanetEngine.js",    "types": "./dist/dev-msx/types/index.d.ts" }
   },
   "devDependencies": {
-    "rollup": "^4.0.0"
+    "rollup": "^4.0.0",
+    "vitest": "^3.0.0"
   }
 }

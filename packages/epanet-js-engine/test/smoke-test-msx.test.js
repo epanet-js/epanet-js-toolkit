@@ -1,4 +1,4 @@
-import assert from 'assert'
+import { it, expect } from 'vitest'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
@@ -19,9 +19,7 @@ const VERSIONS = [
   'dev',
 ]
 
-for (const version of VERSIONS) {
-  process.stdout.write(`[${version}-msx] `)
-
+it.each(VERSIONS)('EPANET-MSX %s produces correct simulation results', async (version) => {
   const { default: factory } = await import(`../dist/${version}-msx/EpanetEngine.js`)
   const wasmBinary = readFileSync(join(__dirname, `../dist/${version}-msx/EpanetEngine.wasm`))
   const f = await loader(() => factory({ wasmBinary }))
@@ -42,25 +40,22 @@ for (const version of VERSIONS) {
   f.free(rptPtr)
   f.free(outPtr)
 
-  assert.ok(enOpenResult === 0, `EN_open failed: ${enOpenResult}`)
+  expect(enOpenResult, `EN_open failed: ${enOpenResult}`).toBe(0)
 
   const msxPtr = f.allocateUTF8('net.msx')
   const msxOpenResult = f.MSXopen(ph, msxPtr)
   f.free(msxPtr)
 
-  assert.ok(msxOpenResult === 0, `MSXopen failed: ${msxOpenResult}`)
+  expect(msxOpenResult, `MSXopen failed: ${msxOpenResult}`).toBe(0)
 
   f.MSXsolveH()
   f.MSXsolveQ()
   f.MSXreport()
 
   const rpt = f.FS.readFile('net.rpt', { encoding: 'utf8' })
-  assert.ok(rpt.length > 0, 'net.rpt must not be empty')
-
-  console.log('OK! MSX report:')
-  console.log(rpt)
+  expect(rpt.length, 'net.rpt must not be empty').toBeGreaterThan(0)
 
   f.MSXclose()
   f.EN_close(ph)
   f.EN_deleteproject(ph)
-}
+})
