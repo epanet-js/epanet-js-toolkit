@@ -99,3 +99,18 @@ indexLines.push(...interfaceLines);
 indexLines.push('');
 
 writeFileSync(join(outDir, 'index.d.ts'), indexLines.join('\n'));
+
+// --- EpanetEngine.d.ts (factory wrapper one level above types/) ---
+// Placed at build/EpanetEngine.d.ts so the build script can copy it alongside
+// EpanetEngine.js. Importing from a versioned sub-path then resolves the
+// factory's return type to the typed EpanetEngine interface, which lets
+// loader<T>() propagate the full API surface to callers.
+
+const wrapperLines = [
+  `export type { EpanetEngine } from './types/index';`,
+  `declare const factory: (options?: object) => Promise<import('./types/index').EpanetEngine>;`,
+  `export default factory;`,
+  '',
+];
+
+writeFileSync(join(process.cwd(), 'build', 'EpanetEngine.d.ts'), wrapperLines.join('\n'));

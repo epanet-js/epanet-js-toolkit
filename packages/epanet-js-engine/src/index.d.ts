@@ -32,6 +32,9 @@ export type EpanetEngineFactory = () => Promise<object>
 /**
  * Initialises an EpanetEngine WASM module and returns an object with all
  * exported C functions as named properties (underscore prefix optional).
+ * When the factory comes from a typed versioned sub-path the return type
+ * carries all API function signatures from that version's `EpanetEngine`
+ * interface.
  *
  * @example
  * import { loader } from "epanet-engine"
@@ -42,4 +45,4 @@ export type EpanetEngineFactory = () => Promise<object>
  * f.EN_open(proj, ptr, 0, 0)
  * f.free(ptr)
  */
-export function loader(factory: EpanetEngineFactory): Promise<EpanetEngineApi>
+export function loader<T extends object>(factory: () => Promise<T>): Promise<EpanetEngineRuntime & T>
