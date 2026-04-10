@@ -12,6 +12,7 @@
     "build": "./scripts/build.sh && rollup -c && cp src/index.d.ts dist/index.d.ts && cp -r lib/. dist/",
     "test": "vitest run",
     "prepublishOnly": "npm run build",
+    "publish:local": "npm run clean && npm run build && npm pack",
     "clean": "rm -rf build dist lib"
   },
   "exports": {
