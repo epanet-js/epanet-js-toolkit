@@ -56,3 +56,4 @@ Arsenic Oxidation/Adsorption Example
   SPECIES  AS5   YES
   SPECIES  AS5s  YES
   SPECIES  NH2CL YES
+  FILE msxreport.txt           ;Report file
