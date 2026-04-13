@@ -4,12 +4,12 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
 import { loader } from '../dist/index.js'
+import * as factory from '../dist/lts/EpanetEngine.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 it('EPANET LTS (single-file) produces correct simulation results', async () => {
-  const { default: factory } = await import('../dist/lts/EpanetEngine.js')
-  const f = await loader(() => factory())
+  const f = await loader(() => factory.default())
 
   f.FS.writeFile('net.inp', readFileSync(join(__dirname, 'network.inp')))
 
