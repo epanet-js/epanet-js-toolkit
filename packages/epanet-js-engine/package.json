@@ -1,5 +1,5 @@
 {
-  "name": "epanet-engine",
+  "name": "@epanet-js/epanet-engine",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.cjs",
