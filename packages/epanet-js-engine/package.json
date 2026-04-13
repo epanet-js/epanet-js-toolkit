@@ -9,6 +9,8 @@
     "dist"
   ],
   "scripts": {
+    "build:image": "./scripts/build-docker-image.sh",
+    "build:docker": "docker run --rm -v ./dist:/opt/epanet/dist epanet-js-engine npm run build",
     "build": "./scripts/build.sh && rollup -c && cp src/index.d.ts dist/index.d.ts && cp -r lib/. dist/",
     "test": "vitest run",
     "prepublishOnly": "npm run build",
