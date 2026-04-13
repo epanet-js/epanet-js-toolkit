@@ -49,6 +49,12 @@ else()
         -s ASSERTIONS=0")
 endif()
 
+if(SINGLE_FILE)
+    set(SINGLE_FILE_LINK_FLAG "-s SINGLE_FILE=1")
+else()
+    set(SINGLE_FILE_LINK_FLAG "-s SINGLE_FILE=0")
+endif()
+
 set_target_properties(EpanetEngine PROPERTIES
     LINK_FLAGS "\
         ${BUILD_TYPE_LINK_FLAGS} \
@@ -58,7 +64,7 @@ set_target_properties(EpanetEngine PROPERTIES
         -s EXPORT_NAME='EpanetEngine' \
         -s ENVIRONMENT=web \
         -s ALLOW_MEMORY_GROWTH=1 \
-        -s SINGLE_FILE=0 \
+        ${SINGLE_FILE_LINK_FLAG} \
         -s FILESYSTEM=1 \
         -s FORCE_FILESYSTEM=1 \
         -s EXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap','allocateUTF8','UTF8ToString','getValue','setValue'] \

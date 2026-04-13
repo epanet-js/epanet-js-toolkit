@@ -11,6 +11,7 @@ set -e
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOºURCE[0]}")" && pwd)"
 BUILD_EPANET="${PROJECT_DIR}/scripts/build_epanet.sh"
 
+LTS_VERSION="v2.3.5"
 VERSIONS=(
     v2.2
     v2.3
@@ -23,6 +24,15 @@ VERSIONS=(
     dev
 )
 
+function copyFiles() {
+    local version=$1
+
+    cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/lib/${version}/"
+    [ -f "${PROJECT_DIR}/build/EpanetEngine.wasm" ] && cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/lib/${version}/"
+    cp "${PROJECT_DIR}/build/EpanetEngine.d.ts" "${PROJECT_DIR}/lib/${version}/"
+    cp -r "${PROJECT_DIR}/build/types" "${PROJECT_DIR}/lib/${version}/"
+}
+
 for version in "${VERSIONS[@]}"; do
     echo ""
     echo "=========================================="
@@ -32,22 +42,27 @@ for version in "${VERSIONS[@]}"; do
     mkdir -p "${PROJECT_DIR}/lib/${version}"
     mkdir -p "${PROJECT_DIR}/lib/${version}-msx"
 
-    echo "[1/2] EPANET only..."
+    echo "[1/2] EPANET..."
     bash "$BUILD_EPANET" "--epanet-tag=${version}"
-    cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/lib/${version}/"
-    cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/lib/${version}/"
-    cp "${PROJECT_DIR}/build/EpanetEngine.d.ts" "${PROJECT_DIR}/lib/${version}/"
-    cp -r "${PROJECT_DIR}/build/types" "${PROJECT_DIR}/lib/${version}/"
+    copyFiles "$version"
 
     echo "[2/2] EPANET + MSX..."
     bash "$BUILD_EPANET" "--epanet-tag=${version}" --enable_msx
-    cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/lib/${version}-msx/"
-    cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/lib/${version}-msx/"
-    cp "${PROJECT_DIR}/build/EpanetEngine.d.ts" "${PROJECT_DIR}/lib/${version}-msx/"
-    cp -r "${PROJECT_DIR}/build/types" "${PROJECT_DIR}/lib/${version}-msx/"
+    copyFiles "${version}-msx"
 
     echo "  -> ${version} done."
 done
+
+echo ""
+echo "=========================================="
+echo "Building EPANET LTS (${LTS_VERSION}) as single-file"
+echo "=========================================="
+
+mkdir -p "${PROJECT_DIR}/lib/lts"
+bash "$BUILD_EPANET" "--epanet-tag=${LTS_VERSION}" --enable_msx --single-file
+copyFiles "lts"
+
+echo "  -> LTS (${LTS_VERSION}) done."
 
 echo ""
 echo "=========================================="

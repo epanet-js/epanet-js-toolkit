@@ -11,12 +11,14 @@ set -e  # Exit on any error
 # Configuration
 EPANET_TAG="${EPANET_TAG:-v2.3.5}"
 ENABLE_MSX=0
+SINGLE_FILE=0
 BUILD_TYPE="Release"
 for arg in "$@"; do
     case "$arg" in
-        --enable_msx)        ENABLE_MSX=1 ;;
+        --enable_msx)      ENABLE_MSX=1 ;;
         --epanet-tag=*)    EPANET_TAG="${arg#--epanet-tag=}" ;;
         --debug)           BUILD_TYPE="Debug" ;;
+        --single-file)     SINGLE_FILE=1
     esac
 done
 
@@ -91,6 +93,7 @@ echo "  -> Done."
 echo "[6/7] Building with Emscripten..."
 CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
 [ "$ENABLE_MSX" = "1" ] && CMAKE_ARGS="${CMAKE_ARGS} -DINCLUDE_MSX=1"
+[ "$SINGLE_FILE" = "1" ] && CMAKE_ARGS="${CMAKE_ARGS} -DSINGLE_FILE=1"
 echo "  -> Running emcmake cmake .."
 emcmake cmake $CMAKE_ARGS ..
 echo "  -> Running make -j8"
