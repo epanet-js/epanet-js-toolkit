@@ -19,3 +19,9 @@ target_include_directories(epanet2 PUBLIC ${EPANET_SRC_DIR}
 target_compile_definitions(epanet2 PRIVATE
     -DEN_API_FLOAT_TYPE=double
 )
+
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(epanet2 PRIVATE -O2 -flto)
+else()
+    target_compile_options(epanet2 PRIVATE -O0)
+endif()

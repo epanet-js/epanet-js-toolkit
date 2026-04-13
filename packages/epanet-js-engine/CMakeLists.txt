@@ -46,6 +46,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
     set(BUILD_TYPE_LINK_FLAGS "\
         -O2 \
+        -flto \
         -s ASSERTIONS=0")
 endif()
 

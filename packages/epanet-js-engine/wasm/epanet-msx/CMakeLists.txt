@@ -35,3 +35,9 @@ target_include_directories(epanetmsx PUBLIC
     ${MSX_SRC_DIR}/include
     ${CMAKE_SOURCE_DIR}/build/EPANET/include
 )
+
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(epanetmsx PRIVATE -O2  -flto)
+else()
+    target_compile_options(epanetmsx PRIVATE -O0)
+endif()
