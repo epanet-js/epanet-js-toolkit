@@ -40,7 +40,8 @@
     "./master":     { "import": "./dist/master/EpanetEngine.js",     "types": "./dist/master/EpanetEngine.d.ts" },
     "./master-msx": { "import": "./dist/master-msx/EpanetEngine.js", "types": "./dist/master-msx/EpanetEngine.d.ts" },
     "./dev":        { "import": "./dist/dev/EpanetEngine.js",        "types": "./dist/dev/EpanetEngine.d.ts" },
-    "./dev-msx":    { "import": "./dist/dev-msx/EpanetEngine.js",    "types": "./dist/dev-msx/EpanetEngine.d.ts" }
+    "./dev-msx":    { "import": "./dist/dev-msx/EpanetEngine.js",    "types": "./dist/dev-msx/EpanetEngine.d.ts" },
+    "./lts":        { "import": "./dist/lts/EpanetEngine.js",        "types": "./dist/lts/EpanetEngine.d.ts" }
   },
   "devDependencies": {
     "rollup": "^4.0.0",
