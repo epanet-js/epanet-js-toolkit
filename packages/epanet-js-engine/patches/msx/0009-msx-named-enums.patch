@@ -1,0 +1,52 @@
+diff --git a/src/solver/include/epanetmsx.h b/src/solver/include/epanetmsx.h
+index 2b43006..defb684 100644
+--- a/src/solver/include/epanetmsx.h
++++ b/src/solver/include/epanetmsx.h
+@@ -36,24 +36,29 @@ extern "C" {
+ #endif
+ 
+ // --- define MSX constants
+-
+-#define MSX_NODE      0
+-#define MSX_LINK      1
+-#define MSX_TANK      2
+-#define MSX_SPECIES   3
+-#define MSX_TERM      4
+-#define MSX_PARAMETER 5
+-#define MSX_CONSTANT  6
+-#define MSX_PATTERN   7
+-
+-#define MSX_BULK      0
+-#define MSX_WALL      1
+-
+-#define MSX_NOSOURCE  -1
+-#define MSX_CONCEN     0
+-#define MSX_MASS       1
+-#define MSX_SETPOINT   2
+-#define MSX_FLOWPACED  3
++typedef enum {
++  MSX_NODE = 0,
++  MSX_LINK = 1,
++  MSX_TANK = 2,
++  MSX_SPECIES = 3,
++  MSX_TERM = 4,
++  MSX_PARAMETER = 5,
++  MSX_CONSTANT = 6,
++  MSX_PATTERN = 7
++} MSX_Constant;
++
++typedef enum {
++  MSX_BULK = 0,
++  MSX_WAL = 1
++} MSX_ChemicalSpeciesType;
++
++typedef enum {
++  MSX_NOSOURCE =  -1,
++  MSX_CONCEN = 0,
++  MSX_MASS = 1,
++  MSX_SETPOINT = 2,
++  MSX_FLOWPACED = 3
++} MSX_ChemicalSpeciesSourceType;
+ 
+ // --- declare MSX functions
+ 

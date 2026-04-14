@@ -1,0 +1,292 @@
+diff --git a/src/solver/include/epanetmsx.h b/src/solver/include/epanetmsx.h
+index 1bc1aa5..2b43006 100644
+--- a/src/solver/include/epanetmsx.h
++++ b/src/solver/include/epanetmsx.h
+@@ -57,43 +57,287 @@ extern "C" {
+ 
+ // --- declare MSX functions
+ 
++/**
++@brief Opens the EPANET toolkit system (pass-through).
++@param[in] ph an EPANET project handle.
++@param[in] inpFile name of the EPANET input file.
++@param[in] rptFile name of the EPANET report file.
++@param[in] outFile name of the EPANET binary output file.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXENopen(EN_Project ph, const char *inpFile, const char *rptFile,
+                  const char *outFile);
++
++/**
++@brief Opens the EPANET-MSX toolkit system.
++@param[in] ph an EPANET project handle.
++@param[in] fname name of an MSX input file.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXopen(EN_Project ph, char *fname);
++
++/**
++@brief Solves for system hydraulics which are written to a temporary file.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsolveH(void);
++
++/**
++@brief Registers a hydraulics solution file with the MSX system.
++@param[in] fname name of binary hydraulics results file.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXusehydfile(char *fname);
++
++/**
++@brief Runs a complete MSX water quality analysis over the entire simulation period.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsolveQ(void);
++
++/**
++@brief Initializes a MSX water quality analysis.
++@param[in] saveFlag 1 if results are to be saved to a binary file, 0 if not.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXinit(int saveFlag);
++
++/**
++@brief Advances the WQ simulation by a single time step.
++@param[out] t current simulation time at the end of the step (seconds).
++@param[out] tleft time remaining in the simulation (seconds).
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXstep(double *t, double *tleft);
++
++/**
++@brief Saves all results of the WQ simulation to a binary file.
++@param[in] fname name of the binary results file.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsaveoutfile(char *fname);
++
++/**
++@brief Saves the current MSX project data to an MSX-formatted input file.
++@param[in] fname name of the MSX input file to be saved.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsavemsxfile(char *fname);
++
++/**
++@brief Writes requested WQ simulation results to a text report file.
++@return an error code (or 0 for no error).
++
++Results are written to the EPANET report file unless a specific water quality
++report file is named in the [REPORT] section of the MSX input file.
++*/
+ int  MSXDLLEXPORT MSXreport(void);
++
++/**
++@brief Closes the EPANET-MSX toolkit system.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXclose(void);
++
++/**
++@brief Closes the EPANET toolkit system (pass-through).
++@param[in] ph an EPANET project handle.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXENclose(EN_Project ph);
+ 
++/**
++@brief Retrieves the index of a named MSX object.
++@param[in] type object type code (e.g. MSX_SPECIES, MSX_PATTERN).
++@param[in] id name of the object.
++@param[out] index index (base 1) of the object in the list of all objects of the given type.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetindex(int type, char *id, int *index);
++
++/**
++@brief Retrieves the number of characters in the ID name of an MSX object.
++@param[in] type object type code.
++@param[in] index index (base 1) of the object in the list of all objects of the given type.
++@param[out] len number of characters in the object's ID name.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetIDlen(int type, int index, int *len);
++
++/**
++@brief Retrieves the ID name of an object given its index.
++@param[in] type object type code.
++@param[in] index index (base 1) of the object in the list of all objects of the given type.
++@param[out] id name of the object.
++@param[in] len maximum number of characters that id can hold.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetID(int type, int index, char *id, int len);
++
++/**
++@brief Retrieves the number of objects of a specific type.
++@param[in] type object type code.
++@param[out] count number of objects of the given type.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetcount(int type, int *count);
++
++/**
++@brief Retrieves the attributes of a chemical species.
++@param[in] index index (base 1) of the species in the list of all species.
++@param[out] type MSX_BULK (0) for a bulk flow species or MSX_WALL (1) for a surface species.
++@param[out] units character string containing the mass units defined for the species;
++            must be sized to accept up to 15 bytes plus a null termination character.
++@param[out] aTol absolute concentration tolerance (concentration units).
++@param[out] rTol relative concentration tolerance (unitless).
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetspecies(int index, int *type, char *units, double *aTol,
+                double *rTol);
++
++/**
++@brief Retrieves the value of a particular reaction constant.
++@param[in] index index (base 1) of the constant in the list of all constants.
++@param[out] value value assigned to the constant.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetconstant(int index, double *value);
++
++/**
++@brief Retrieves the value of a particular reaction parameter for a given pipe or tank.
++@param[in] type MSX_NODE (0) for a node or MSX_LINK (1) for a link.
++@param[in] index index (base 1) assigned to the node or link.
++@param[in] param index (base 1) assigned to the reaction parameter.
++@param[out] value value assigned to the parameter.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetparameter(int type, int index, int param, double *value);
++
++/**
++@brief Retrieves information on any external source of a particular chemical species at a node.
++@param[in] node index number (base 1) assigned to the node of interest.
++@param[in] species index number (base 1) of the species of interest.
++@param[out] type one of the source type codes: MSX_NOSOURCE (-1), MSX_CONCEN (0),
++            MSX_MASS (1), MSX_SETPOINT (2), or MSX_FLOWPACED (3).
++@param[out] level baseline concentration (or mass flow rate) of the species in the source.
++@param[out] pat index of the time pattern assigned to the species at the source.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetsource(int node, int species, int *type, double *level,
+                int *pat);
++
++/**
++@brief Retrieves the number of time periods within a source time pattern.
++@param[in] pat index number (base 1) of the time pattern.
++@param[out] len number of time periods that appear in the pattern.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetpatternlen(int pat, int *len);
++
++/**
++@brief Retrieves the multiplier at a specific time period for a given source time pattern.
++@param[in] pat index number (base 1) of the time pattern.
++@param[in] period index of the time period (starting from 1) whose multiplier is sought.
++@param[out] value value of the pattern's multiplier in the desired period.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetpatternvalue(int pat, int period, double *value);
++
++/**
++@brief Retrieves the initial concentration of a particular chemical species at a node or link.
++@param[in] type MSX_NODE (0) for a node or MSX_LINK (1) for a link.
++@param[in] index index (base 1) of the node or link of interest.
++@param[in] species index (base 1) of the species of interest.
++@param[out] value initial concentration of the species at the node or link.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetinitqual(int type, int index, int species, double *value);
++
++/**
++@brief Retrieves the current concentration of a species at a particular node or link.
++@param[in] type MSX_NODE (0) for a node or MSX_LINK (1) for a link.
++@param[in] index index (base 1) of the node or link of interest.
++@param[in] species index (base 1) of the species of interest.
++@param[out] value species concentration at the node or link.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXgetqual(int type, int index, int species, double *value);
++
++/**
++@brief Retrieves the text of an error message.
++@param[in] code error code number.
++@param[out] msg text of the error message.
++@param[in] len maximum number of characters that msg can hold.
++@return an error code which is always 0.
++*/
+ int  MSXDLLEXPORT MSXgeterror(int code, char *msg, int len);
+ 
++/**
++@brief Assigns a new value to a specific reaction constant.
++@param[in] index index (base 1) of the constant in the list of all constants.
++@param[in] value new value to be assigned to the constant.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsetconstant(int index, double value);
++
++/**
++@brief Assigns a value to a particular reaction parameter for a given pipe or tank.
++@param[in] type MSX_NODE (0) for a node or MSX_LINK (1) for a link.
++@param[in] index index (base 1) assigned to the node or link.
++@param[in] param index (base 1) assigned to the reaction parameter.
++@param[in] value value to be assigned to the parameter.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsetparameter(int type, int index, int param, double value);
++
++/**
++@brief Assigns an initial concentration of a particular chemical species to a node or link.
++@param[in] type MSX_NODE (0) for a node or MSX_LINK (1) for a link.
++@param[in] index index (base 1) of the node or link of interest.
++@param[in] species index (base 1) of the species of interest.
++@param[in] value initial concentration of the species at the node or link.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsetinitqual(int type, int index, int species, double value);
++
++/**
++@brief Sets the attributes of an external source of a particular chemical species at a node.
++@param[in] node index number (base 1) assigned to the node of interest.
++@param[in] species index number (base 1) of the species of interest.
++@param[in] type one of the source type codes: MSX_NOSOURCE (-1), MSX_CONCEN (0),
++            MSX_MASS (1), MSX_SETPOINT (2), or MSX_FLOWPACED (3).
++@param[in] level baseline concentration (or mass flow rate) of the species in the source.
++@param[in] pat index of the time pattern assigned to the species at the source.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsetsource(int node, int species, int type, double level,
+                int pat);
++
++/**
++@brief Assigns a new value to the multiplier for a specific time period in a time pattern.
++@param[in] pat index number (base 1) of the time pattern.
++@param[in] period time period (starting from 1) whose multiplier is being replaced.
++@param[in] value new value of the pattern's multiplier in the desired period.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsetpatternvalue(int pat, int period, double value);
++
++/**
++@brief Assigns a new set of multipliers to a given time pattern.
++@param[in] pat index number (base 1) of the time pattern.
++@param[in] mult array of multiplier values (base 0) to replace those previously used by the pattern.
++@param[in] len number of entries in the multiplier array mult.
++@return an error code (or 0 for no error).
++*/
+ int  MSXDLLEXPORT MSXsetpattern(int pat, double mult[], int len);
++
++/**
++@brief Adds a new MSX time pattern to the project.
++@param[in] id C-style character string with the ID name of the new pattern.
++@return an error code (or 0 for no error).
++
++The new pattern is appended to the end of the existing patterns.
++*/
+ int  MSXDLLEXPORT MSXaddpattern(char *id);
+ 
+ 

@@ -1,0 +1,1194 @@
+diff --git a/src/solver/include/epanetmsx.h b/src/solver/include/epanetmsx.h
+index 285217f..67db53d 100644
+--- a/src/solver/include/epanetmsx.h
++++ b/src/solver/include/epanetmsx.h
+@@ -5,11 +5,11 @@
+ **  AUTHORS:       see AUTHORS
+ **  Copyright:     see AUTHORS
+ **  License:       see LICENSE
+-**  VERSION:       2.0.0 
++**  VERSION:       2.0.0
+ **  LAST UPDATE:   11/01/10
+ *******************************************************************************/
+ 
+-#include "epanet2.h"                   // EPANET toolkit header file
++#include "epanet2_2.h"                   // EPANET toolkit header file
+ 
+ #ifndef EPANETMSX_H
+ #define EPANETMSX_H
+@@ -55,9 +55,9 @@ extern "C" {
+ 
+ // --- declare MSX functions
+ 
+-int  MSXDLLEXPORT MSXENopen(const char *inpFile, const char *rptFile,
++int  MSXDLLEXPORT MSXENopen(EN_Project ph, const char *inpFile, const char *rptFile,
+                  const char *outFile);
+-int  MSXDLLEXPORT MSXopen(char *fname);
++int  MSXDLLEXPORT MSXopen(EN_Project ph, char *fname);
+ int  MSXDLLEXPORT MSXsolveH(void);
+ int  MSXDLLEXPORT MSXusehydfile(char *fname);
+ int  MSXDLLEXPORT MSXsolveQ(void);
+@@ -67,7 +67,7 @@ int  MSXDLLEXPORT MSXsaveoutfile(char *fname);
+ int  MSXDLLEXPORT MSXsavemsxfile(char *fname);
+ int  MSXDLLEXPORT MSXreport(void);
+ int  MSXDLLEXPORT MSXclose(void);
+-int  MSXDLLEXPORT MSXENclose(void);
++int  MSXDLLEXPORT MSXENclose(EN_Project ph);
+ 
+ int  MSXDLLEXPORT MSXgetindex(int type, char *id, int *index);
+ int  MSXDLLEXPORT MSXgetIDlen(int type, int index, int *len);
+diff --git a/src/solver/msxerr.c b/src/solver/msxerr.c
+index 63dfa06..32cff5f 100644
+--- a/src/solver/msxerr.c
++++ b/src/solver/msxerr.c
+@@ -13,7 +13,7 @@
+ #include <string.h>
+ 
+ #include "msxtypes.h"
+-#include "epanet2.h"
++#include "epanet2_2.h"
+ 
+ //  External variables
+ //--------------------
+@@ -67,8 +67,8 @@ void MSXerr_writeMathErrorMsg()
+ **    writes math error message to EPANET report file.
+ */
+ {
+-	ENwriteline(mathErrorMsg);
+-	ENwriteline("");
++	EN_writeline(MSX.ProjectHandle, mathErrorMsg);
++	EN_writeline(MSX.ProjectHandle, "");
+ }
+ 
+ //=============================================================================
+diff --git a/src/solver/msxfile.c b/src/solver/msxfile.c
+index 26cc66d..2154a33 100644
+--- a/src/solver/msxfile.c
++++ b/src/solver/msxfile.c
+@@ -15,7 +15,7 @@
+ #include "msxtypes.h"
+ #include "msxutils.h"
+ #include "msxdict.h"
+-#include "epanet2.h"
++#include "epanet2_2.h"
+ 
+ //  External variables
+ //--------------------
+@@ -152,7 +152,7 @@ void  saveParams(FILE *f)
+             {
+                 if ( MSX.Link[i].param[j] != x )
+                 {
+-                    ENgetlinkid(i, id);
++                    EN_getlinkid(MSX.ProjectHandle, i, id);
+                     fprintf(f, "\nPIPE    %-32s  %-32s  %e",
+                         id, MSX.Param[j].id, MSX.Link[i].param[j]);
+                 }
+@@ -162,7 +162,7 @@ void  saveParams(FILE *f)
+                 if ( MSX.Tank[i].param[j] != x )
+                 {
+                     k = MSX.Tank[i].node;
+-                    ENgetnodeid(k, id);
++                    EN_getnodeid(MSX.ProjectHandle, k, id);
+                     fprintf(f, "\nTANK    %-32s  %-32s  %e",
+                         id, MSX.Param[j].id, MSX.Tank[i].param[j]);
+                 }
+@@ -189,16 +189,16 @@ void  saveQuality(FILE *f)
+         {
+             if ( MSX.Node[i].c0[j] > 0.0 && MSX.Node[i].c0[j] != MSX.C0[j])
+             {
+-                ENgetnodeid(i, id);
++                EN_getnodeid(MSX.ProjectHandle, i, id);
+                 fprintf(f, "\nNODE    %-32s  %-32s  %e",
+                     id, MSX.Species[j].id, MSX.Node[i].c0[j]);
+             }
+         }
+         for (i=1; i<=MSX.Nobjects[LINK]; i++)
+         {
+-            if ( MSX.Link[i].c0[j] > 0.0 && MSX.Link[i].c0[j] != MSX.C0[j])			
++            if ( MSX.Link[i].c0[j] > 0.0 && MSX.Link[i].c0[j] != MSX.C0[j])
+             {
+-                ENgetlinkid(i, id);
++                EN_getlinkid(MSX.ProjectHandle, i, id);
+                 fprintf(f, "\nLINK    %-32s  %-32s  %e",
+                     id, MSX.Species[j].id, MSX.Link[i].c0[j]);
+             }
+@@ -222,7 +222,7 @@ void  saveSources(FILE *f)
+         {
+             if ( source->c0 > 0.0 && source->type > -1)   //Feng Shang 09/23/2008
+             {
+-                ENgetnodeid(i, id);
++                EN_getnodeid(MSX.ProjectHandle, i, id);
+                 fprintf(f, "\n%-10s  %-32s  %-32s  %e",
+                     SourceTypeWords[source->type], id,
+                     MSX.Species[source->species].id, source->c0);
+diff --git a/src/solver/msxinp.c b/src/solver/msxinp.c
+index cebf547..78b265f 100644
+--- a/src/solver/msxinp.c
++++ b/src/solver/msxinp.c
+@@ -18,7 +18,7 @@
+ #include "msxtypes.h"
+ #include "msxutils.h"
+ #include "msxdict.h"
+-#include "epanet2.h"
++#include "epanet2_2.h"
+ 
+ //  Constants
+ //-----------
+@@ -34,18 +34,18 @@ extern MSXproject  MSX;                // MSX project data
+ //-----------------
+ static char *Tok[MAXTOKS];             // String tokens from line of input
+ static int  Ntokens;                   // Number of tokens in line of input
+-static double **TermArray;             // Incidence array used to check Terms  
++static double **TermArray;             // Incidence array used to check Terms
+ 
+ enum InpErrorCodes {                   // Error codes (401 - 409)
+     INP_ERR_FIRST        = 400,
+     ERR_LINE_LENGTH,
+-    ERR_ITEMS, 
++    ERR_ITEMS,
+     ERR_KEYWORD,
+     ERR_NUMBER,
+     ERR_NAME,
+     ERR_RESERVED_NAME,
+     ERR_DUP_NAME,
+-    ERR_DUP_EXPR, 
++    ERR_DUP_EXPR,
+     ERR_MATH_EXPR,
+     ERR_UNSUPPORTED_OPTION,
+     INP_ERR_LAST};
+@@ -59,7 +59,7 @@ static char  *InpErrorTxt[INP_ERR_LAST-INP_ERR_FIRST] = {
+     "Error 405 (reference to undefined object)",
+     "Error 406 (illegal use of a reserved name)",
+     "Error 407 (name already used by another object)",
+-    "Error 408 (species already assigned an expression)", 
++    "Error 408 (species already assigned an expression)",
+     "Error 409 (illegal math expression)",
+     "Error 410 (option no longer supported)"};
+ 
+@@ -103,8 +103,8 @@ static int    getVariableCode(char *id);
+ static int    getTokens(char *s);
+ static void   writeInpErrMsg(int errcode, char *sect, char *line, int lineCount);
+ 
+-static int    checkCyclicTerms(void);                                          
+-static int    traceTermPath(int i, int istar, int n);                          
++static int    checkCyclicTerms(void);
++static int    traceTermPath(int i, int istar, int n);
+ 
+ //=============================================================================
+ 
+@@ -120,21 +120,21 @@ int MSXinp_countMsxObjects()
+ **    an error code (0 if no error)
+ */
+ {
+-    char  line[MAXLINE+1];             // line from input data file     
+-    char  wLine[MAXLINE+1];            // working copy of input line   
+-    char  *tok;                        // first string token of line          
+-    int   sect = -1;                   // input data sections          
++    char  line[MAXLINE+1];             // line from input data file
++    char  wLine[MAXLINE+1];            // working copy of input line
++    char  *tok;                        // first string token of line
++    int   sect = -1;                   // input data sections
+     int   errcode = 0;                 // error code
+-    int   errsum = 0;                  // number of errors found                   
++    int   errsum = 0;                  // number of errors found
+     long  lineCount = 0;
+ 
+ // --- write name of input file to EPANET report file
+-    
++
+     strcpy(MSX.Msg, "Processing MSX input file ");
+     strcpy(line, MSX.MsxFile.name);
+     strcat(MSX.Msg, line);
+-    ENwriteline(MSX.Msg);
+-    ENwriteline("");
++    EN_writeline(MSX.ProjectHandle, MSX.Msg);
++    EN_writeline(MSX.ProjectHandle, "");
+ 
+ // --- make pass through EPANET-MSX data file counting number of each object
+ 
+@@ -192,9 +192,9 @@ int  MSXinp_countNetObjects()
+ 
+ // --- retrieve number of network elements
+ 
+-    CALL(errcode, ENgetcount(EN_NODECOUNT, &MSX.Nobjects[NODE]));
+-    CALL(errcode, ENgetcount(EN_TANKCOUNT, &MSX.Nobjects[TANK]));
+-    CALL(errcode, ENgetcount(EN_LINKCOUNT, &MSX.Nobjects[LINK]));
++    CALL(errcode, EN_getcount(MSX.ProjectHandle, EN_NODECOUNT, &MSX.Nobjects[NODE]));
++    CALL(errcode, EN_getcount(MSX.ProjectHandle, EN_TANKCOUNT, &MSX.Nobjects[TANK]));
++    CALL(errcode, EN_getcount(MSX.ProjectHandle, EN_LINKCOUNT, &MSX.Nobjects[LINK]));
+     return errcode;
+ }
+ 
+@@ -216,22 +216,22 @@ int MSXinp_readNetData()
+     int   i, k, n, t = 0;
+     int   n1 = 0, n2 = 0;
+     long  qstep;
+-    float diam = 0.0, len = 0.0, v0 = 0.0, xmix = 0.0, vmix = 0.0;
++    double diam = 0.0, len = 0.0, v0 = 0.0, xmix = 0.0, vmix = 0.0;
+ 
+-    float roughness = 0.0;   
++    double roughness = 0.0;
+ 
+ // --- get flow units & time parameters
+ 
+-    CALL(errcode, ENgetflowunits(&MSX.Flowflag));
++    CALL(errcode, EN_getflowunits(MSX.ProjectHandle, &MSX.Flowflag));
+     if ( MSX.Flowflag >= EN_LPS ) MSX.Unitsflag = SI;
+     else                          MSX.Unitsflag = US;
+-    CALL(errcode, ENgettimeparam(EN_QUALSTEP, &qstep));
++    CALL(errcode, EN_gettimeparam(MSX.ProjectHandle, EN_QUALSTEP, &qstep));
+     MSX.Qstep = qstep * 1000;
+-    CALL(errcode, ENgettimeparam(EN_REPORTSTEP, &MSX.Rstep));
+-    CALL(errcode, ENgettimeparam(EN_REPORTSTART, &MSX.Rstart));
+-    CALL(errcode, ENgettimeparam(EN_PATTERNSTEP, &MSX.Pstep));
+-    CALL(errcode, ENgettimeparam(EN_PATTERNSTART, &MSX.Pstart));
+-    CALL(errcode, ENgettimeparam(EN_STATISTIC, &MSX.Statflag));
++    CALL(errcode, EN_gettimeparam(MSX.ProjectHandle, EN_REPORTSTEP, &MSX.Rstep));
++    CALL(errcode, EN_gettimeparam(MSX.ProjectHandle, EN_REPORTSTART, &MSX.Rstart));
++    CALL(errcode, EN_gettimeparam(MSX.ProjectHandle, EN_PATTERNSTEP, &MSX.Pstep));
++    CALL(errcode, EN_gettimeparam(MSX.ProjectHandle, EN_PATTERNSTART, &MSX.Pstart));
++    CALL(errcode, EN_gettimeparam(MSX.ProjectHandle, EN_STATISTIC, &MSX.Statflag));
+ 
+ // --- read tank/reservoir data
+ 
+@@ -241,10 +241,10 @@ int MSXinp_readNetData()
+         k = i - n;
+         if ( k > 0 )
+         {
+-            CALL(errcode, ENgetnodetype(i, &t));
+-            CALL(errcode, ENgetnodevalue(i, EN_INITVOLUME, &v0));
+-            CALL(errcode, ENgetnodevalue(i, EN_MIXMODEL,   &xmix));
+-            CALL(errcode, ENgetnodevalue(i, EN_MIXZONEVOL, &vmix));
++            CALL(errcode, EN_getnodetype(MSX.ProjectHandle, i, &t));
++            CALL(errcode, EN_getnodevalue(MSX.ProjectHandle, i, EN_INITVOLUME, &v0));
++            CALL(errcode, EN_getnodevalue(MSX.ProjectHandle, i, EN_MIXMODEL,   &xmix));
++            CALL(errcode, EN_getnodevalue(MSX.ProjectHandle, i, EN_MIXZONEVOL, &vmix));
+             if ( !errcode )
+             {
+                 MSX.Node[i].tank = k;
+@@ -262,17 +262,17 @@ int MSXinp_readNetData()
+ 
+     for (i=1; i<=MSX.Nobjects[LINK]; i++)
+     {
+-        CALL(errcode, ENgetlinknodes(i, &n1, &n2));
+-        CALL(errcode, ENgetlinkvalue(i, EN_DIAMETER, &diam));
+-        CALL(errcode, ENgetlinkvalue(i, EN_LENGTH, &len));
+-        CALL(errcode, ENgetlinkvalue(i, EN_ROUGHNESS, &roughness));  
++        CALL(errcode, EN_getlinknodes(MSX.ProjectHandle, i, &n1, &n2));
++        CALL(errcode, EN_getlinkvalue(MSX.ProjectHandle, i, EN_DIAMETER, &diam));
++        CALL(errcode, EN_getlinkvalue(MSX.ProjectHandle, i, EN_LENGTH, &len));
++        CALL(errcode, EN_getlinkvalue(MSX.ProjectHandle, i, EN_ROUGHNESS, &roughness));
+         if ( !errcode )
+         {
+             MSX.Link[i].n1 = n1;
+             MSX.Link[i].n2 = n2;
+             MSX.Link[i].diam = diam;
+             MSX.Link[i].len = len;
+-            MSX.Link[i].roughness = roughness;  
++            MSX.Link[i].roughness = roughness;
+         }
+     }
+     return errcode;
+@@ -299,10 +299,10 @@ int  MSXinp_readMsxData()
+     int   inperr = 0;                  // input error code
+     long  lineCount = 0;               // line count
+ 
+-// --- create the TermArray for checking circular references in Terms         
++// --- create the TermArray for checking circular references in Terms
+ 
+-	TermArray = createMatrix(MSX.Nobjects[TERM]+1, MSX.Nobjects[TERM]+1);      
+-	if ( TermArray == NULL ) return ERR_MEMORY;                                
++	TermArray = createMatrix(MSX.Nobjects[TERM]+1, MSX.Nobjects[TERM]+1);
++	if ( TermArray == NULL ) return ERR_MEMORY;
+ 
+ // --- read each line from MSX input file
+ 
+@@ -348,9 +348,9 @@ int  MSXinp_readMsxData()
+ 
+ // --- check for errors
+ 
+-    if ( checkCyclicTerms() ) errsum++;                                        
+-    freeMatrix(TermArray);                                                    
+-    if (errsum > 0) return ERR_MSX_INPUT;                                     
++    if ( checkCyclicTerms() ) errsum++;
++    freeMatrix(TermArray);
++    if (errsum > 0) return ERR_MSX_INPUT;
+     return 0;
+ }
+ 
+@@ -407,7 +407,7 @@ int  getNewSection(char *tok, char *sectWords[], int *sect)
+ **    checks if a line begins a new section in the input file.
+ **
+ **  Input:
+-**    tok = a string token 
++**    tok = a string token
+ **    sectWords = array of input file section keywords
+ **
+ **  Output:
+@@ -436,7 +436,7 @@ int  getNewSection(char *tok, char *sectWords[], int *sect)
+ //=============================================================================
+ 
+ int addSpecies(char *line)
+-/* 
++/*
+ **  Purpose:
+ **    adds a species ID name to the project.
+ **
+@@ -461,7 +461,7 @@ int addSpecies(char *line)
+ //=============================================================================
+ 
+ int addCoeff(char *line)
+-/* 
++/*
+ **  Purpose:
+ **    adds a coefficient ID name to the project.
+ **
+@@ -496,12 +496,12 @@ int addCoeff(char *line)
+ //=============================================================================
+ 
+ int addTerm(char *id)
+-/* 
++/*
+ **  Purpose:
+ **    adds an intermediate expression term ID name to the project.
+ **
+ **  Input:
+-**    id = name of an intermediate expression term 
++**    id = name of an intermediate expression term
+ **
+ **  Returns:
+ **    an error code (0 if no error)
+@@ -520,7 +520,7 @@ int addTerm(char *id)
+ //=============================================================================
+ 
+ int addPattern(char *id)
+-/* 
++/*
+ **  Purpose:
+ **    adds a time pattern ID name to the project.
+ **
+@@ -547,12 +547,12 @@ int addPattern(char *id)
+ //=============================================================================
+ 
+ int checkID(char *id)
+-/* 
++/*
+ **  Purpose:
+ **    checks that an object's name is unique
+ **
+ **  Input:
+-**    id = name of an object 
++**    id = name of an object
+ **
+ **  Returns:
+ **    an error code (0 if successful)
+@@ -565,7 +565,7 @@ int checkID(char *id)
+       if (MSXutils_strcomp(id, HydVarWords[i])) return ERR_RESERVED_NAME;
+       i++;
+    }
+-    
++
+ // --- check that id name not used before
+ 
+     if ( MSXproj_findObject(SPECIES, id) > 0 ||
+@@ -574,12 +574,12 @@ int checkID(char *id)
+          MSXproj_findObject(CONSTANT, id)  > 0
+        ) return ERR_DUP_NAME;
+     return 0;
+-}        
++}
+ 
+ //=============================================================================
+ 
+ int parseLine(int sect, char *line)
+-/* 
++/*
+ **  Purpose:
+ **    parses the contents of a line of input data.
+ **
+@@ -608,7 +608,7 @@ int parseLine(int sect, char *line)
+ 
+       case s_TERM:
+         return parseTerm();
+-      
++
+       case s_PIPE:
+         return parseExpression(LINK);
+ 
+@@ -706,10 +706,10 @@ int parseOption()
+           if ( !MSXutils_getDouble(Tok[1], &MSX.DefAtol) ) return ERR_NUMBER;
+           break;
+ 
+-      case COMPILER_OPTION:                                                    
++      case COMPILER_OPTION:
+           k = MSXutils_findmatch(Tok[1], CompilerWords);
+           if ( k < 0 ) return ERR_KEYWORD;
+-    	  MSX.Compiler = k;
++	  MSX.Compiler = k;
+           break;
+ 
+       case PECLETNUMER_OPTION:
+@@ -809,7 +809,7 @@ int parseCoeff()
+ 
+     // --- get Parameter's value
+ 
+-        MSX.Param[i].id = MSXproj_findID(PARAMETER, Tok[1]); 
++        MSX.Param[i].id = MSXproj_findID(PARAMETER, Tok[1]);
+         if ( Ntokens >= 3 )
+         {
+             if ( !MSXutils_getDouble(Tok[2], &x) ) return ERR_NUMBER;
+@@ -831,7 +831,7 @@ int parseCoeff()
+ 
+     // --- get Constant's value
+ 
+-        MSX.Const[i].id = MSXproj_findID(CONSTANT, Tok[1]); 
++        MSX.Const[i].id = MSXproj_findID(CONSTANT, Tok[1]);
+         MSX.Const[i].value = 0.0;
+         if ( Ntokens >= 3 )
+         {
+@@ -858,7 +858,7 @@ int parseTerm()
+ */
+ {
+     int i, j;
+-	int k;                                                                   
++	int k;
+     char s[MAXLINE+1] = "";
+     MathExpr *expr;
+ 
+@@ -866,17 +866,17 @@ int parseTerm()
+ 
+     if ( Ntokens < 2 ) return 0;
+     i = MSXproj_findObject(TERM, Tok[0]);
+-    MSX.Term[i].id = MSXproj_findID(TERM, Tok[0]);                             
++    MSX.Term[i].id = MSXproj_findID(TERM, Tok[0]);
+ 
+ // --- reconstruct the expression string from its tokens
+ 
+     for (j=1; j<Ntokens; j++)
+-	{                                                                          
+-		strcat(s, Tok[j]);                     
+-		k = MSXproj_findObject(TERM, Tok[j]);                                  
+-		if ( k > 0 ) TermArray[i][k] = 1.0;                                  
+-	}                                                                          
+-    
++	{
++		strcat(s, Tok[j]);
++		k = MSXproj_findObject(TERM, Tok[j]);
++		if ( k > 0 ) TermArray[i][k] = 1.0;
++	}
++
+ // --- convert expression into a postfix stack of op codes
+ 
+     expr = mathexpr_create(s, getVariableCode);
+@@ -906,7 +906,7 @@ int parseExpression(int classType)
+     char s[MAXLINE+1] = "";
+     MathExpr *expr;
+ 
+-// --- determine expression type 
++// --- determine expression type
+ 
+     if ( Ntokens < 3 ) return ERR_ITEMS;
+     k = MSXutils_findmatch(Tok[0], ExprTypeWords);
+@@ -931,7 +931,7 @@ int parseExpression(int classType)
+ // --- reconstruct the expression string from its tokens
+ 
+     for (j=2; j<Ntokens; j++) strcat(s, Tok[j]);
+-    
++
+ // --- convert expression into a postfix stack of op codes
+ 
+     expr = mathexpr_create(s, getVariableCode);
+@@ -950,7 +950,7 @@ int parseExpression(int classType)
+         MSX.Species[i].tankExprType = k;
+         break;
+     }
+-    return 0;    
++    return 0;
+ }
+ 
+ //=============================================================================
+@@ -1009,7 +1009,7 @@ int parseQuality()
+ 
+     else if ( i == 2 )
+     {
+-        err = ENgetnodeindex(Tok[1], &j);
++        err = EN_getnodeindex(MSX.ProjectHandle, Tok[1], &j);
+         if ( err ) return ERR_NAME;
+         if ( MSX.Species[m].type == BULK ) MSX.Node[j].c0[m] = x;
+     }
+@@ -1018,7 +1018,7 @@ int parseQuality()
+ 
+     else if ( i == 3 )
+     {
+-        err = ENgetlinkindex(Tok[1], &j);
++        err = EN_getlinkindex(MSX.ProjectHandle, Tok[1], &j);
+         if ( err ) return ERR_NAME;
+         MSX.Link[j].c0[m] = x;
+     }
+@@ -1055,7 +1055,7 @@ int parseParameter()
+ 
+     if ( MSXutils_match(Tok[0], "PIPE") )
+     {
+-        err = ENgetlinkindex(Tok[1], &j);
++        err = EN_getlinkindex(MSX.ProjectHandle, Tok[1], &j);
+         if ( err ) return ERR_NAME;
+         MSX.Link[j].param[i] = x;
+     }
+@@ -1064,7 +1064,7 @@ int parseParameter()
+ 
+     else if ( MSXutils_match(Tok[0], "TANK") )
+     {
+-        err = ENgetnodeindex(Tok[1], &j);
++        err = EN_getnodeindex(MSX.ProjectHandle, Tok[1], &j);
+         if ( err ) return ERR_NAME;
+         j = MSX.Node[j].tank;
+         if ( j > 0 ) MSX.Tank[j].param[i] = x;
+@@ -1099,7 +1099,7 @@ int parseSource()
+ 
+ // --- get node index
+ 
+-    err = ENgetnodeindex(Tok[1], &j);
++    err = EN_getnodeindex(MSX.ProjectHandle, Tok[1], &j);
+     if ( err ) return ERR_NAME;
+ 
+ //  --- get species index
+@@ -1150,7 +1150,7 @@ int parseSource()
+     source->c0      = x;
+     source->pat     = i;
+     return 0;
+-}    
++}
+ 
+ //=============================================================================
+ 
+@@ -1218,7 +1218,7 @@ int parseReport()
+     {
+ 
+     // --- keyword is NODE; parse ID names of reported nodes
+-    
++
+         case 0:
+         if ( MSXutils_strcomp(Tok[1], ALL) )
+         {
+@@ -1230,7 +1230,7 @@ int parseReport()
+         }
+         else for (i=1; i<Ntokens; i++)
+         {
+-            err = ENgetnodeindex(Tok[i], &j);
++            err = EN_getnodeindex(MSX.ProjectHandle, Tok[i], &j);
+             if ( err ) return ERR_NAME;
+             MSX.Node[j].rpt = 1;
+         }
+@@ -1248,7 +1248,7 @@ int parseReport()
+         }
+         else for (i=1; i<Ntokens; i++)
+         {
+-            err = ENgetlinkindex(Tok[i], &j);
++            err = EN_getlinkindex(MSX.ProjectHandle, Tok[i], &j);
+             if ( err ) return ERR_NAME;
+             MSX.Link[j].rpt = 1;
+         }
+@@ -1319,7 +1319,7 @@ int parseDiffu()
+     if (Ntokens > 2 && MSXutils_match(Tok[2], "FIXED"))
+     {
+         x = x * MSX.Dispersion.DIFFUS;
+-        MSX.Dispersion.ld[m] = x;     
++        MSX.Dispersion.ld[m] = x;
+     }
+     else
+     {
+@@ -1345,7 +1345,7 @@ int getVariableCode(char *id)
+ **    index of the symbolic variable or term named id.
+ **
+ **  Note:
+-**    Variables are assigned consecutive code numbers starting from 1 
++**    Variables are assigned consecutive code numbers starting from 1
+ **    and proceeding through each Species, Term, Parameter and Constant.
+ */
+ {
+@@ -1356,10 +1356,10 @@ int getVariableCode(char *id)
+     j = MSXproj_findObject(PARAMETER, id);
+     if ( j >= 1 ) return MSX.Nobjects[SPECIES] + MSX.Nobjects[TERM] + j;
+     j = MSXproj_findObject(CONSTANT, id);
+-    if ( j >= 1 ) return MSX.Nobjects[SPECIES] + MSX.Nobjects[TERM] + 
++    if ( j >= 1 ) return MSX.Nobjects[SPECIES] + MSX.Nobjects[TERM] +
+                          MSX.Nobjects[PARAMETER] + j;
+     j = MSXutils_findmatch(id, HydVarWords);
+-    if ( j >= 1 ) return MSX.Nobjects[SPECIES] + MSX.Nobjects[TERM] + 
++    if ( j >= 1 ) return MSX.Nobjects[SPECIES] + MSX.Nobjects[TERM] +
+                          MSX.Nobjects[PARAMETER] + MSX.Nobjects[CONSTANT] + j;
+     return -1;
+ }
+@@ -1392,7 +1392,7 @@ int  getTokens(char *s)
+     for (n = 0; n < MAXTOKS; n++) Tok[n] = NULL;
+     n = 0;
+ 
+-    // --- truncate s at start of comment 
++    // --- truncate s at start of comment
+ 
+     c = strchr(s,';');
+     if (c) *c = '\0';
+@@ -1402,7 +1402,7 @@ int  getTokens(char *s)
+ 
+     while (len > 0 && n < MAXTOKS)
+     {
+-        m = (int)strcspn(s,SEPSTR);              // find token length 
++        m = (int)strcspn(s,SEPSTR);              // find token length
+         if (m == 0) s++;                    // no token found
+         else
+         {
+@@ -1413,7 +1413,7 @@ int  getTokens(char *s)
+                 m = (int)strcspn(s,"\"\n"); // find end quote or new line
+             }
+             s[m] = '\0';                    // null-terminate the token
+-            Tok[n] = s;                     // save pointer to token 
++            Tok[n] = s;                     // save pointer to token
+             n++;                            // update token count
+             s += m+1;                       // begin next token
+         }
+@@ -1436,14 +1436,14 @@ void writeInpErrMsg(int errcode, char *sect, char *line, int lineCount)
+         sprintf(msg, "%s at line %d of %s] section:",
+              InpErrorTxt[errcode-INP_ERR_FIRST], lineCount, sect);
+     }
+-    ENwriteline("");
+-    ENwriteline(msg);
+-    ENwriteline(line);
++    EN_writeline(MSX.ProjectHandle, "");
++    EN_writeline(MSX.ProjectHandle, msg);
++    EN_writeline(MSX.ProjectHandle, line);
+ }
+ 
+ //=============================================================================
+ 
+-int checkCyclicTerms()                                                         
++int checkCyclicTerms()
+ /*
+ **  Purpose:
+ **    checks for cyclic references in Term expressions (e.g., T1 = T2 + T3
+@@ -1467,7 +1467,7 @@ int checkCyclicTerms()
+ 	{
+             sprintf(msg, "Error 410 - term %s contains a cyclic reference.",
+                 MSX.Term[i].id);
+-            ENwriteline(msg);
++            EN_writeline(MSX.ProjectHandle, msg);
+             return 1;
+         }
+     }
+@@ -1476,7 +1476,7 @@ int checkCyclicTerms()
+ 
+ //=============================================================================
+ 
+-int traceTermPath(int i, int istar, int n)                                    
++int traceTermPath(int i, int istar, int n)
+ /*
+ **  Purpose:
+ **    checks if Term[istar] is in the path of terms that appear when evaluating
+diff --git a/src/solver/msxproj.c b/src/solver/msxproj.c
+index c9c45ac..4a9ee2b 100644
+--- a/src/solver/msxproj.c
++++ b/src/solver/msxproj.c
+@@ -20,7 +20,7 @@
+ //#include "mempool.h"
+ #include "hash.h"
+ #include "smatrix.h"
+-#include "epanet2.h"
++#include "epanet2_2.h"
+ #include "dispersion.h"
+ //  Exported variables
+ //--------------------
+@@ -55,9 +55,9 @@ static char * Errmsg[] =
+      "Error 520 - an MSX project is already opened.",
+      "Error 521 - could not open MSX report file.",                            //(LR-11/20/07)
+ 
+-     "Error 522 - could not compile chemistry functions.",                     
+-     "Error 523 - could not load functions from compiled chemistry file.",     
+-     "Error 524 - illegal math operation."};                                   
++     "Error 522 - could not compile chemistry functions.",
++     "Error 523 - could not load functions from compiled chemistry file.",
++     "Error 524 - illegal math operation."};
+ 
+ //  Imported functions
+ //--------------------
+@@ -132,8 +132,8 @@ int  MSXproj_open(char *fname)
+     CALL(errcode, MSXinp_readNetData());
+     CALL(errcode, MSXinp_readMsxData());
+ 
+-    if (strcmp(MSX.RptFile.name, ""))                                              
+-	CALL(errcode, openRptFile());                                              
++    if (strcmp(MSX.RptFile.name, ""))
++	CALL(errcode, openRptFile());
+ 
+ // --- convert user's units to internal units
+ 
+@@ -141,14 +141,14 @@ int  MSXproj_open(char *fname)
+ 
+     if (MSX.DispersionFlag != 0)
+     {
+-        float relvis;
+-        ENgetoption(13, &relvis);
++        double relvis;
++        EN_getoption(MSX.ProjectHandle, 13, &relvis);
+         MSX.Dispersion.viscosity = relvis * 1.1E-5;
+ 
+         msx_createsparse();   //symmetric matrix
+     }
+ 
+-    // Build nodal adjacency lists 
++    // Build nodal adjacency lists
+     if (errcode == 0 && MSX.Adjlist == NULL)
+     {
+         errcode = buildadjlists();   //parallel links are included
+@@ -309,8 +309,8 @@ void setDefaults()
+     MSX.OutFile.file = NULL;
+     MSX.OutFile.mode = SCRATCH_FILE;
+     MSX.TmpOutFile.file = NULL;
+-    MSXutils_getTempName(MSX.OutFile.name);                                    
+-    MSXutils_getTempName(MSX.TmpOutFile.name);                                 
++    MSXutils_getTempName(MSX.OutFile.name);
++    MSXutils_getTempName(MSX.TmpOutFile.name);
+     strcpy(MSX.RptFile.name, "");
+     strcpy(MSX.Title, "");
+     MSX.Rptflag = 0;
+@@ -322,7 +322,7 @@ void setDefaults()
+     MSX.DefAtol = 0.01;
+     MSX.Solver = EUL;
+     MSX.Coupling = NO_COUPLING;
+-    MSX.Compiler = NO_COMPILER;                                                
++    MSX.Compiler = NO_COMPILER;
+     MSX.ErrCode = 0;
+     MSX.AreaUnits = FT2;
+     MSX.RateUnits = DAYS;
+@@ -341,7 +341,7 @@ void setDefaults()
+     MSX.Term = NULL;
+     MSX.Const = NULL;
+     MSX.Pattern = NULL;
+-    MSX.K = NULL;                                                              
++    MSX.K = NULL;
+ }
+ 
+ //=============================================================================
+@@ -456,7 +456,7 @@ int createObjects()
+     MSX.Param   = (Sparam *)   calloc(MSX.Nobjects[PARAMETER]+1, sizeof(Sparam));
+     MSX.Const   = (Sconst *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(Sconst));
+     MSX.Pattern = (Spattern *) calloc(MSX.Nobjects[PATTERN]+1, sizeof(Spattern));
+-    MSX.K       = (double *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(double));  
++    MSX.K       = (double *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(double));
+ 
+ // --- create arrays for demands, heads, & flows
+ 
+@@ -561,10 +561,10 @@ void deleteObjects()
+     {
+         FREE(MSX.Node[i].c);
+         FREE(MSX.Node[i].c0);
+-		if(MSX.Node[i].sources) 
++		if(MSX.Node[i].sources)
+ 		{
+ 			struct Ssource *p=MSX.Node[i].sources;
+-			while(p != NULL) 
++			while(p != NULL)
+ 			{
+ 				MSX.Node[i].sources=p->next;
+ 				FREE(p);
+@@ -632,7 +632,7 @@ void deleteObjects()
+     FREE(MSX.Species);
+     FREE(MSX.Param);
+     FREE(MSX.Const);
+-    FREE(MSX.K);                                                               
++    FREE(MSX.K);
+ 
+ // --- free memory used by intermediate terms
+ 
+@@ -726,7 +726,7 @@ int  buildadjlists()   //from epanet for node sorting in WQ routing
+     freeadjlists();
+     MSX.Adjlist = (Padjlist*)calloc(MSX.Nobjects[NODE]+1, sizeof(Padjlist));
+     if (MSX.Adjlist == NULL) return 101;
+-    for (i = 0; i <= MSX.Nobjects[NODE]; i++) 
++    for (i = 0; i <= MSX.Nobjects[NODE]; i++)
+         MSX.Adjlist[i] = NULL;
+ 
+     // For each link, update adjacency lists of its end nodes
+@@ -788,4 +788,3 @@ void  freeadjlists()            //from epanet for node sorting in WQ routing
+     free(MSX.Adjlist);
+     MSX.Adjlist = NULL;
+ }
+-
+diff --git a/src/solver/msxrpt.c b/src/solver/msxrpt.c
+index c71a3e1..dff5534 100644
+--- a/src/solver/msxrpt.c
++++ b/src/solver/msxrpt.c
+@@ -16,7 +16,7 @@
+ #include <math.h>
+ 
+ #include "msxtypes.h"
+-#include "epanet2.h"
++#include "epanet2_2.h"
+ 
+ // Constants
+ //----------
+@@ -64,7 +64,7 @@ float MSXout_getLinkQual(int k, int j, int m);
+ //  Exported functions
+ //--------------------
+ int   MSXrpt_write(void);
+-void  MSXrpt_writeLine(char *line);                                            
++void  MSXrpt_writeLine(char *line);
+ 
+ //  Local functions
+ //-----------------
+@@ -118,10 +118,10 @@ int  MSXrpt_write()
+ 
+ //=============================================================================
+ 
+-void  MSXrpt_writeLine(char *line)                                             
+-{                                                                              
+-    writeLine(line);                                                           
+-}                                                                              
++void  MSXrpt_writeLine(char *line)
++{
++    writeLine(line);
++}
+ 
+ //=============================================================================
+ 
+@@ -134,7 +134,7 @@ void createSeriesTables()
+     for (j=1; j<=MSX.Nobjects[NODE]; j++)
+     {
+         if ( !MSX.Node[j].rpt ) continue;
+-        ENgetnodeid(j, IDname);
++        EN_getnodeid(MSX.ProjectHandle, j, IDname);
+         createTableHdr(NODE, SERIES_TABLE);
+         writeNodeTable(j, SERIES_TABLE);
+     }
+@@ -144,7 +144,7 @@ void createSeriesTables()
+     for (j=1; j<=MSX.Nobjects[LINK]; j++)
+     {
+         if ( !MSX.Link[j].rpt ) continue;
+-        ENgetlinkid(j, IDname);
++        EN_getlinkid(MSX.ProjectHandle, j, IDname);
+         createTableHdr(LINK, SERIES_TABLE);
+         writeLinkTable(j, SERIES_TABLE);
+     }
+@@ -261,7 +261,7 @@ void  writeNodeTable(int j, int tableType)
+         }
+         if ( tableType == STATS_TABLE )
+         {
+-            ENgetnodeid(j, IDname);
++            EN_getnodeid(MSX.ProjectHandle, j, IDname);
+             sprintf(Line, "%-16s", IDname);
+         }
+         for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
+@@ -293,7 +293,7 @@ void  writeLinkTable(int j, int tableType)
+         }
+         if ( tableType == STATS_TABLE )
+         {
+-            ENgetlinkid(j, IDname);
++            EN_getlinkid(MSX.ProjectHandle, j, IDname);
+             sprintf(Line, "%-16s", IDname);
+         }
+         for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
+@@ -341,7 +341,7 @@ void  writeLine(char *line)
+ {
+     if ( LineNum == MSX.PageSize ) newPage();
+     if ( MSX.RptFile.file ) fprintf(MSX.RptFile.file, "  %s\n", line);   //(modified, FS-01/07/2008)
+-    else ENwriteline(line);
++    else EN_writeline(MSX.ProjectHandle, line);
+     LineNum++;
+ }
+ 
+@@ -365,7 +365,7 @@ void writemassbalance()
+     {
+         if (MSX.Species[m].pipeExprType != RATE)
+             continue;
+-        
++
+         snprintf(s1, MAXMSG, "\n");
+         writeLine(s1);
+         snprintf(s1, MAXMSG, "Water Quality Mass Balance: %s (%s)", MSX.Species[m].id, MSX.Species[m].units);
+@@ -390,11 +390,3 @@ void writemassbalance()
+         writeLine(s1);
+     }
+ }
+-
+-
+-
+-
+-
+-
+-
+-
+diff --git a/src/solver/msxtoolkit.c b/src/solver/msxtoolkit.c
+index 51d6b03..1999d04 100644
+--- a/src/solver/msxtoolkit.c
++++ b/src/solver/msxtoolkit.c
+@@ -25,8 +25,8 @@
+ #include <stdlib.h>
+ 
+ #include "msxtypes.h"
+-#include "msxutils.h"                                                          
+-#include "epanet2.h"
++#include "msxutils.h"
++#include "epanet2_2.h"
+ #include "epanetmsx.h"
+ 
+ //  External variables
+@@ -52,7 +52,7 @@ int    MSXfile_save(FILE *f);
+ 
+ //=============================================================================
+ 
+-int MSXDLLEXPORT   MSXENopen(const char *inpFile, const char *rptFile, const char *outFile)
++int MSXDLLEXPORT   MSXENopen(EN_Project ph, const char *inpFile, const char *rptFile, const char *outFile)
+ /*
+ **  Purpose:
+ **    pass-thru to open the EPANET toolkit system
+@@ -67,11 +67,11 @@ int MSXDLLEXPORT   MSXENopen(const char *inpFile, const char *rptFile, const cha
+ */
+ {
+     int err = 0;
+-    err = ENopen(inpFile, rptFile, outFile);
++    err = EN_open(ph, inpFile, rptFile, outFile);
+     return err;
+ }
+ 
+-int MSXDLLEXPORT   MSXENclose(void)
++int MSXDLLEXPORT   MSXENclose(EN_Project ph)
+ /*
+ **  Purpose:
+ **    pass-thru to open the EPANET toolkit system
+@@ -79,12 +79,12 @@ int MSXDLLEXPORT   MSXENclose(void)
+ */
+ {
+     int err = 0;
+-    err = ENclose();
++    err = EN_close(ph);
+     return err;
+ }
+ 
+ 
+-int  MSXDLLEXPORT  MSXopen(char *fname)
++int  MSXDLLEXPORT  MSXopen(EN_Project ph, char *fname)
+ /*
+ **  Purpose:
+ **    opens the EPANET-MSX toolkit system.
+@@ -101,10 +101,12 @@ int  MSXDLLEXPORT  MSXopen(char *fname)
+     CALL(err, MSXproj_open(fname));
+     CALL(err, MSXqual_open());
+ 
++    MSX.ProjectHandle = ph;
++
+     if ( err )
+     {
+-        ENwriteline(MSXproj_getErrmsg(err));
+-        ENwriteline("");
++        EN_writeline(MSX.ProjectHandle, MSXproj_getErrmsg(err));
++        EN_writeline(MSX.ProjectHandle, "");
+     }
+ 
+     return err;
+@@ -141,13 +143,13 @@ int   MSXDLLEXPORT  MSXsolveH()
+ 
+ // --- create a temporary hydraulics file
+ 
+-    MSXutils_getTempName(MSX.HydFile.name);                                    
++    MSXutils_getTempName(MSX.HydFile.name);
+     MSX.HydFile.mode = SCRATCH_FILE;                                           //(LR-10/05/08)
+ 
+ // --- use EPANET to solve for & save hydraulics results
+ 
+-    CALL(err, ENsolveH());
+-    CALL(err, ENsavehydfile(MSX.HydFile.name));
++    CALL(err, EN_solveH(MSX.ProjectHandle));
++    CALL(err, EN_savehydfile(MSX.ProjectHandle, MSX.HydFile.name));
+     CALL(err, MSXusehydfile(MSX.HydFile.name));
+     return err;
+ }
+@@ -174,18 +176,18 @@ int   MSXDLLEXPORT  MSXusehydfile(char *fname)
+ 
+     if ( !MSX.ProjectOpened ) return ERR_MSX_NOT_OPENED;
+ 
+-// --- close any existing hydraulics file 
++// --- close any existing hydraulics file
+ 
+     if ( MSX.HydFile.file )
+     {
+         fclose(MSX.HydFile.file);
+-        if ( MSX.HydFile.mode == SCRATCH_FILE ) remove(MSX.HydFile.name);      //(LR-10/05/08)   
+-    } 
+-	
++        if ( MSX.HydFile.mode == SCRATCH_FILE ) remove(MSX.HydFile.name);      //(LR-10/05/08)
++    }
++
+ 
+ // --- open hydraulics file
+ 
+-    //MSX.HydFile.mode = USED_FILE;                                            
++    //MSX.HydFile.mode = USED_FILE;
+     MSX.HydFile.file = fopen(fname, "rb");
+     if (!MSX.HydFile.file) return ERR_OPEN_HYD_FILE;
+ 
+@@ -1144,7 +1146,7 @@ int  MSXDLLEXPORT  MSXsetpattern(int pat, double mult[], int len)
+         }
+         MSX.Pattern[pat].length++;
+     }
+-	
++
+     MSX.Pattern[pat].interval = 0;			  //Feng Shang   04/17/2008
+     MSX.Pattern[pat].current = MSX.Pattern[pat].first;    //Feng Shang   04/17/2008
+     return 0;
+diff --git a/src/solver/msxtypes.h b/src/solver/msxtypes.h
+index 836ad5d..76350ca 100644
+--- a/src/solver/msxtypes.h
++++ b/src/solver/msxtypes.h
+@@ -18,6 +18,8 @@
+ #include "mathexpr.h"
+ #include "mempool.h"
+ 
++typedef struct Project *EN_Project;
++
+ //-----------------------------------------------------------------------------
+ //  Definition of 4-byte integers & reals
+ //-----------------------------------------------------------------------------
+@@ -211,9 +213,9 @@ typedef  float REAL4;
+                   ATOL_OPTION,
+                   COMPILER_OPTION,
+                   MAXSEGMENT_OPTION,
+-                  PECLETNUMER_OPTION};                                            
++                  PECLETNUMER_OPTION};
+ 
+- enum CompilerType                     // C compiler type                      
++ enum CompilerType                     // C compiler type
+                  {NO_COMPILER,
+                   VC,                  // MS Visual C compiler
+                   GC};                 // Gnu C compiler
+@@ -261,10 +263,10 @@ typedef  float REAL4;
+            ERR_INVALID_OBJECT_PARAMS,  // 518
+            ERR_MSX_NOT_OPENED,         // 519
+            ERR_MSX_OPENED,             // 520
+-           ERR_OPEN_RPT_FILE,          // 521                                             
+-           ERR_COMPILE_FAILED,         // 522                                  
+-           ERR_COMPILED_LOAD,          // 523                                  
+-           ERR_ILLEGAL_MATH,           // 524                                        
++           ERR_OPEN_RPT_FILE,          // 521
++           ERR_COMPILE_FAILED,         // 522
++           ERR_COMPILED_LOAD,          // 523
++           ERR_ILLEGAL_MATH,           // 524
+            ERR_MAX};
+ 
+ 
+@@ -313,7 +315,7 @@ typedef struct                         // NODE OBJECT
+ 
+ typedef struct                         // LINK OBJECT
+ {
+-   int    nsegs;                        // number of active segments   
++   int    nsegs;                        // number of active segments
+    int    n1;                          // start node index
+    int    n2;                          // end node index
+    double diam;                        // diameter
+@@ -322,7 +324,7 @@ typedef struct                         // LINK OBJECT
+    double *c0;                         // initial species concentrations
+    double *reacted;
+    double *param;                      // kinetic parameter values
+-   double roughness;		           // roughness  
++   double roughness;		           // roughness
+    double areasquare;
+    double HydVar[MAX_HYD_VARS];        // hydraulic variables
+ }  Slink;
+@@ -348,12 +350,12 @@ struct Sseg                            // PIPE SEGMENT OBJECT
+     double    hstep;                   // integration time step
+     double    v;                       // segment volume
+     double    *c;                      // species concentrations
+-    double    * lastc;                 // species concentrations of previous step 
++    double    * lastc;                 // species concentrations of previous step
+     struct    Sseg *prev;              // ptr. to previous segment
+     struct    Sseg *next;              // ptr. to next segment
+     double    hresponse,               // for dispersion response of initial,
+-              uresponse,               // upstream and downstream condition 
+-              dresponse;    
++              uresponse,               // upstream and downstream condition
++              dresponse;
+ };
+ typedef struct Sseg *Pseg;
+ 
+@@ -435,9 +437,9 @@ typedef struct                 // Mass Balance Components
+ 
+ typedef struct
+ {
+-   
++
+     double viscosity;
+-    double DIFFUS;       // Diffusivity of chlorine 1.3E-8  @ 20 deg C (sq ft/sec)                                     
++    double DIFFUS;       // Diffusivity of chlorine 1.3E-8  @ 20 deg C (sq ft/sec)
+     double PecletLimit;  // The Pectlet number below which the dispersion in a pipe is considered
+ 
+     int* Order;          // Node-to-row of re-ordered matrix
+@@ -455,18 +457,19 @@ typedef struct
+     double* Aii;         // Diagonal matrix coeffs.
+     double* Aij;         // Non-zero, off-diagonal matrix coeffs.
+     double* F;           // Right hand side vector
+-    
++
+     Padjlist* Adjlist;   // Node adjacency lists
+ 
+ 
+     double* md;          // molecular diffusion
+     double* ld;          // fixed longitudinal dispersion coefficient
+-    double* pipeDispersionCoeff;  //effective longitudinal dispersion coefficient	 
++    double* pipeDispersionCoeff;  //effective longitudinal dispersion coefficient
+ } Sdispersion;
+ 
+ 
+ typedef struct                         // MSX PROJECT VARIABLES
+ {
++   EN_Project ProjectHandle;
+    TFile  HydFile,                     // EPANET hydraulics file
+           MsxFile,                     // MSX input file
+           OutFile,                     // MSX binary output file
+@@ -482,7 +485,7 @@ typedef struct                         // MSX PROJECT VARIABLES
+           Saveflag,                    // Save results flag
+           Rptflag,                     // Report results flag
+           Coupling,                    // Degree of coupling for solving DAE's
+-          Compiler,                    // chemistry function compiler code     
++          Compiler,                    // chemistry function compiler code
+           AreaUnits,                   // Surface area units
+           RateUnits,                   // Reaction rate time units
+           Solver,                      // Choice of ODE solver
+@@ -491,7 +494,7 @@ typedef struct                         // MSX PROJECT VARIABLES
+           ErrCode,                     // Error code
+           ProjectOpened,               // Project opened flag
+           QualityOpened;               // Water quality system opened flag
+-   int    MaxSegments;                 // Maximum number of segments in a link  
++   int    MaxSegments;                 // Maximum number of segments in a link
+    long   HydOffset,                   // Hydraulics file byte offset
+           Pstep,                       // Time pattern time step (sec)
+           Pstart,                      // Starting pattern time (sec)
+@@ -508,12 +511,12 @@ typedef struct                         // MSX PROJECT VARIABLES
+    REAL4  *D,                          // Node demands
+           *H,                          // Node heads
+           *Q,                          // Link flows
+-          *S;                          // Link status   
++          *S;                          // Link status
+ 
+    double Ucf[MAX_UNIT_TYPES],         // Unit conversion factors
+           DefRtol,                     // Default relative error tolerance
+           DefAtol,                     // Default absolute error tolerance
+-          *K,                          // Vector of expression constants       
++          *K,                          // Vector of expression constants
+           *C0,                         // Species initial quality vector
+           *C1;                         // Species concentration vector
+ 
+@@ -528,7 +531,7 @@ typedef struct                         // MSX PROJECT VARIABLES
+    Slink    *Link;                     // Link data
+    Stank    *Tank;                     // Tank data
+    Spattern *Pattern;                  // Pattern data
+-   
++
+    char      HasWallSpecies;           // wall species indicator
+    char      OutOfMemory;              // out of memory indicator
+    Padjlist* Adjlist;                  // Node adjacency lists
+@@ -543,7 +546,7 @@ typedef struct                         // MSX PROJECT VARIABLES
+    double* MassIn;        // mass inflow of each species to each node
+    double* SourceIn;      // external mass inflow of each species from WQ source;
+    int* SortedNodes;
+-  
++
+    Sdispersion Dispersion;
+ 
+ } MSXproject;

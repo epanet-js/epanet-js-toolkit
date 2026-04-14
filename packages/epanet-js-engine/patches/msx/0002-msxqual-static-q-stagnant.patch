@@ -1,0 +1,11 @@
+--- a/src/solver/msxqual.c
++++ b/src/solver/msxqual.c
+@@ -43,7 +43,7 @@ extern MSXproject  MSX;                // MSX project data
+ //static alloc_handle_t *QualPool;       // memory pool
+
+ // Stagnant flow tolerance
+-const double Q_STAGNANT = 0.005 / GPMperCFS;     // 0.005 gpm = 1.114e-5 cfs
++static const double Q_STAGNANT = 0.005 / GPMperCFS;     // 0.005 gpm = 1.114e-5 cfs
+
+ //  Imported functions
+ //--------------------
