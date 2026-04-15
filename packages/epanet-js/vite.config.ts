@@ -1,17 +1,19 @@
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
+import { resolve } from "path";
 
 export default defineConfig({
   build: {
     lib: {
-      entry: "src/index.ts",
-      name: "EpanetJs",
+      entry: {
+        index: resolve(__dirname, "src/index.ts"),
+        "slim/index": resolve(__dirname, "src/slim/index.ts"),
+      },
       formats: ["es", "cjs"],
-      fileName: (format) => `index.${format === "es" ? "mjs" : "cjs"}`,
+      fileName: (format, entryName) =>
+        `${entryName}.${format === "es" ? "mjs" : "cjs"}`,
     },
-    rollupOptions: {
-      external: ["@model-create/epanet-engine"],
-    },
+    rollupOptions: {},
   },
   plugins: [dts()],
 });

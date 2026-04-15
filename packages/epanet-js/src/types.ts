@@ -1,4 +1,4 @@
-import type { EpanetModule } from "@model-create/epanet-engine";
+import { EpanetEngine } from "@epanet-js/epanet-engine";
 
 // Define memory types more strictly
 export type EpanetMemoryType = "int" | "double" | "char" | "char-title";
@@ -39,7 +39,7 @@ export interface OutputArgDef {
 // Define the structure for API function metadata
 export interface ApiFunctionDefinition {
   /** The exact name exported by WASM (e.g., '_EN_getnodeindex') */
-  wasmFunctionName: keyof EpanetModule; // Allow string for flexibility
+  wasmFunctionName: keyof EpanetEngine; // Allow string for flexibility
 
   /** Describes the INPUT arguments the JS function receives (excluding project handle) */
   inputArgDefs: InputArgDef[];

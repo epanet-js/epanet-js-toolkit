@@ -9,9 +9,9 @@ class MockWorkspace extends Workspace {
     const mockInstance = {
       _malloc: vi.fn((size) => (size > 0 ? 1000 : 0)),
       _free: vi.fn(),
-      getValue: vi.fn((ptr, type) => (type === "i32" ? epanetVersion : 0)),
-      lengthBytesUTF8: vi.fn((ptr) => 10),
-      UTF8ToString: vi.fn((ptr) => "mock string"),
+      getValue: vi.fn((_ptr, type) => (type === "i32" ? epanetVersion : 0)),
+      lengthBytesUTF8: vi.fn((_ptr) => 10),
+      UTF8ToString: vi.fn((_ptr) => "mock string"),
       stringToUTF8: vi.fn((str, len, ptr) => {
         if (ptr) {
           const buffer = new Uint8Array(ptr);
@@ -26,10 +26,10 @@ class MockWorkspace extends Workspace {
         writeFile: vi.fn(),
         readFile: vi.fn(),
       },
-      _EN_getversion: vi.fn((ptr) => 0),
+      _EN_getversion: vi.fn((_ptr) => 0),
       _EN_getnodeindex: vi.fn(() => 0),
-      _EN_getspecialnodeprop_v23: vi.fn((idx, ptr) => 0),
-      _EN_createproject: vi.fn((idx, ptr) => 0),
+      _EN_getspecialnodeprop_v23: vi.fn((_idx, _ptr) => 0),
+      _EN_createproject: vi.fn((_idx, _ptr) => 0),
     } as any;
     Object.defineProperty(this, "instance", { get: () => mockInstance });
   }

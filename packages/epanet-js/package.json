@@ -14,6 +14,11 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs",
       "types": "./dist/src/index.d.ts"
+    },
+    "./slim": {
+      "import": "./dist/slim/index.mjs",
+      "require": "./dist/slim/index.cjs",
+      "types": "./dist/src/slim/index.d.ts"
     }
   },
   "repository": {
@@ -31,7 +36,7 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@model-create/epanet-engine": "workspace:*"
+    "@epanet-js/epanet-engine": "workspace:*"
   },
   "peerDependencies": {},
   "prettier": {

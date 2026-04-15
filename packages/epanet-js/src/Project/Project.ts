@@ -5,7 +5,7 @@ import {
   // Import other needed types/enums
 } from "../types"; // Adjust path if types are elsewhere
 
-import type { EpanetModule } from "@model-create/epanet-engine";
+import type { EpanetEngineAPI } from "@epanet-js/epanet-engine";
 
 import { Workspace } from "../";
 import {
@@ -36,12 +36,12 @@ import { apiDefinitions } from "../apiDefinitions";
 
 interface FinalizerHeldValue {
   projectHandle: number;
-  enInstance: EpanetModule;
+  enInstance: EpanetEngineAPI;
 }
 
 class Project {
   _ws: Workspace;
-  _EN: EpanetModule | undefined; // Use the combined type EpanetModule
+  _EN: EpanetEngineAPI | undefined; // Use the combined type EpanetEngineApi
   private _projectHandle!: number; // Assert definite assignment
   private _epanetVersionInt: number = -1;
   private readonly _absoluteMinVersion = 20200;
@@ -72,7 +72,7 @@ class Project {
             }
           } else {
             console.warn(
-              `Finalizer: Function ${funcName} not found in EpanetModule instance during cleanup for handle ${projectHandle}.`,
+              `Finalizer: Function ${funcName} not found in EpanetEngineApi instance during cleanup for handle ${projectHandle}.`,
             );
           }
         } else {
@@ -485,7 +485,7 @@ class Project {
 
     try {
       // Initialize the pointer with the input index using HEAP32
-      this._EN.HEAP32[indexPtr >> 2] = index;
+      this._EN.setValue(indexPtr, index, 'i32');
 
       // Call the WASM function
       const errorCode = this._EN._EN_setlinktype(
@@ -523,7 +523,7 @@ class Project {
   private _initializeProject(): void {
     // Create the project FIRST, as version check might now need it (or not)
     // But subsequent API calls definitely will. Assert assignment with !
-    this._EN = this._ws.instance as EpanetModule;
+    this._EN = this._ws.instance as EpanetEngineAPI;
     this._projectHandle = this._createProject();
 
     this._epanetVersionInt = this._getAndVerifyEpanetVersion();
@@ -542,7 +542,7 @@ class Project {
       return (...args: any[]) => {
         // Check if module is now loaded using the new isLoaded property
         if (this._ws.isLoaded) {
-          this._EN = this._ws.instance as EpanetModule;
+          this._EN = this._ws.instance as EpanetEngineAPI;
           if (this._ws.isLoaded) {
             // Module is now loaded, initialize the project
             this._initializeProject();
@@ -757,13 +757,11 @@ class Project {
         definition.inputArgDefs?.forEach((inputDef, index) => {
           const arg = userArgs[index];
           if (inputDef.isStringPtr && typeof arg === "string") {
-            const utf8Length = EN.lengthBytesUTF8(arg) + 1; // Null terminator
-            const ptr = EN._malloc(utf8Length);
+            const ptr = EN.allocateUTF8(arg);
             if (ptr === 0)
               throw new Error(
                 `Malloc failed for input string arg ${index} in ${methodName}`,
               );
-            EN.stringToUTF8(arg, ptr, utf8Length);
             inputStringPointers.push(ptr); // Remember to free this
             processedWasmArgs.push(ptr); // Add pointer to WASM args
           } else if (inputDef.typeHint === "double[]") {
@@ -925,7 +923,9 @@ class Project {
       );
     }
 
-    EN.HEAPF64.set(typedArray, dataPtr / typedArray.BYTES_PER_ELEMENT);
+    typedArray.forEach((value, i) => {
+      EN.setValue(dataPtr + i*typedArray.BYTES_PER_ELEMENT, value, 'double');
+    })
 
     return dataPtr;
   }
