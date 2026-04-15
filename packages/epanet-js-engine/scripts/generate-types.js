@@ -67,15 +67,15 @@ function buildJSDoc(fn) {
 
 const interfaceLines = [];
 interfaceLines.push('export interface EpanetEngine {');
-interfaceLines.push('  malloc(size: number): number;');
-interfaceLines.push('  free(ptr: number): void;');
+interfaceLines.push('  _malloc(size: number): number;');
+interfaceLines.push('  _free(ptr: number): void;');
 
 for (const fn of functions) {
   interfaceLines.push('');
   const jsdoc = buildJSDoc(fn);
   if (jsdoc) interfaceLines.push(jsdoc);
   const params = fn.args.map(({ name, type }) => `${name}: ${mapCType(type)}`).join(', ');
-  interfaceLines.push(`  ${fn.name}(${params}): ${mapCType(fn.returnType)};`);
+  interfaceLines.push(`  _${fn.name}(${params}): ${mapCType(fn.returnType)};`);
 }
 
 interfaceLines.push('}');
@@ -97,21 +97,24 @@ if (enumNames.length > 0) indexLines.push(`export * from './enums';`);
 if (enumNames.length > 0) indexLines.push('');
 indexLines.push(...interfaceLines);
 indexLines.push('');
+indexLines.push(`/**`);
+indexLines.push(` * Emscripten runtime utilities always present on the loaded module.`);
+indexLines.push(` */`);
+indexLines.push(`export interface EpanetEngineRuntime {`);
+indexLines.push(`  FS: any`);
+indexLines.push(`  UTF8ToString(ptr: number, maxBytesToRead?: number): string`);
+indexLines.push(`  stringToUTF8(str: string, outPtr: number, maxBytesToWrite: number): void`);
+indexLines.push(`  getValue(ptr: number, type: string): number`);
+indexLines.push(`  setValue(ptr: number, value: number, type: string): void`);
+indexLines.push(`  allocateUTF8(str: string): number`);
+indexLines.push(`  ccall(ident: string, returnType: string | null, argTypes: string[], args: any[]): any`);
+indexLines.push(`  cwrap(ident: string, returnType: string | null, argTypes: string[]): (...args: any[]) => any`);
+indexLines.push(`}`);
+indexLines.push(``);
+indexLines.push(`export interface EpanetEngineAPI extends EpanetEngine, EpanetEngineRuntime {}`);
+indexLines.push(``);
+indexLines.push(`declare function EpanetEngineFactory(moduleArg?: object): Promise<EpanetEngineAPI>;`);
+indexLines.push(`export default EpanetEngineFactory;`);
+indexLines.push('');
 
 writeFileSync(join(outDir, 'index.d.ts'), indexLines.join('\n'));
-
-// --- EpanetEngine.d.ts (factory wrapper one level above types/) ---
-// Placed at build/EpanetEngine.d.ts so the build script can copy it alongside
-// EpanetEngine.js. Importing from a versioned sub-path then resolves the
-// factory's return type to the typed EpanetEngine interface, which lets
-// loader<T>() propagate the full API surface to callers.
-
-const wrapperLines = [
-  `import type { EpanetEngine } from './types/index';`,
-  `export * from './types/index';`,
-  `declare function EpanetEngineFactory(moduleArg?: object): Promise<EpanetEngine>;`,
-  `export default EpanetEngineFactory;`,
-  '',
-];
-
-writeFileSync(join(process.cwd(), 'build', 'EpanetEngine.d.ts'), wrapperLines.join('\n'));

@@ -3,8 +3,9 @@
 # producing both an EPANET-only and an EPANET+MSX variant for each.
 #
 # Output layout:
-#   lib/<version>/EpanetEngine.{js,wasm}        EPANET only
-#   lib/<version>/msx/EpanetEngine.{js,wasm}    EPANET + MSX
+#   dist/<version>/EpanetEngine.wasm , index.js , index.d.ts        EPANET only
+#   dist/<version>-msx/EpanetEngine.wasm , index.js , index.d.ts    EPANET + MSX
+#   dist/index.js , index.d.ts                                      EPANET + MSX (latest) as single-file JS bundle
 
 set -e
 
@@ -27,10 +28,9 @@ VERSIONS=(
 function copyFiles() {
     local version=$1
 
-    cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/lib/${version}/"
-    [ -f "${PROJECT_DIR}/build/EpanetEngine.wasm" ] && cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/lib/${version}/"
-    cp "${PROJECT_DIR}/build/EpanetEngine.d.ts" "${PROJECT_DIR}/lib/${version}/"
-    cp -r "${PROJECT_DIR}/build/types" "${PROJECT_DIR}/lib/${version}/"
+    cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/dist/${version}/index.js"
+    [ -f "${PROJECT_DIR}/build/EpanetEngine.wasm" ] && cp "${PROJECT_DIR}/build/EpanetEngine.wasm" "${PROJECT_DIR}/dist/${version}/"
+    cp -r ${PROJECT_DIR}/build/types/* "${PROJECT_DIR}/dist/${version}/"
 }
 
 for version in "${VERSIONS[@]}"; do
@@ -39,8 +39,8 @@ for version in "${VERSIONS[@]}"; do
     echo "Building EPANET ${version}"
     echo "=========================================="
 
-    mkdir -p "${PROJECT_DIR}/lib/${version}"
-    mkdir -p "${PROJECT_DIR}/lib/${version}-msx"
+    mkdir -p "${PROJECT_DIR}/dist/${version}"
+    mkdir -p "${PROJECT_DIR}/dist/${version}-msx"
 
     echo "[1/2] EPANET..."
     bash "$BUILD_EPANET" "--epanet-tag=${version}"
@@ -54,13 +54,13 @@ for version in "${VERSIONS[@]}"; do
 done
 
 echo ""
-echo "=========================================="
-echo "Building EPANET LTS (${LTS_VERSION}) as single-file"
-echo "=========================================="
+echo "======================================================="
+echo "Building EPANET+MSX LTS (${LTS_VERSION}) as single-file"
+echo "======================================================="
 
-mkdir -p "${PROJECT_DIR}/lib/lts"
 bash "$BUILD_EPANET" "--epanet-tag=${LTS_VERSION}" --enable_msx --single-file
-copyFiles "lts"
+cp "${PROJECT_DIR}/build/EpanetEngine.js"   "${PROJECT_DIR}/dist/index.js"
+cp -r ${PROJECT_DIR}/build/types/* "${PROJECT_DIR}/dist"
 
 echo "  -> LTS (${LTS_VERSION}) done."
 
