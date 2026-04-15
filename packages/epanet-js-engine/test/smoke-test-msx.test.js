@@ -25,39 +25,39 @@ it.each(VERSIONS)('EPANET-MSX %s produces correct simulation results', async (ve
   f.FS.writeFile('net.inp', readFileSync(join(__dirname, 'network_msx.inp')))
   f.FS.writeFile('net.msx', readFileSync(join(__dirname, 'network_msx.msx')))
 
-  const phPtr = f.malloc(4)
-  f.EN_createproject(phPtr)
+  const phPtr = f._malloc(4)
+  f._EN_createproject(phPtr)
   const ph = f.getValue(phPtr, 'i32')
-  f.free(phPtr)
+  f._free(phPtr)
 
   const inpPtr = f.allocateUTF8('net.inp')
   const rptPtr = f.allocateUTF8('net.rpt')
   const outPtr = f.allocateUTF8('net.out')
-  const enOpenResult = f.EN_open(ph, inpPtr, rptPtr, outPtr)
-  f.free(inpPtr)
-  f.free(rptPtr)
-  f.free(outPtr)
+  const enOpenResult = f._EN_open(ph, inpPtr, rptPtr, outPtr)
+  f._free(inpPtr)
+  f._free(rptPtr)
+  f._free(outPtr)
 
   expect(enOpenResult, `EN_open failed: ${enOpenResult}`).toBe(0)
 
   const msxPtr = f.allocateUTF8('net.msx')
-  const msxOpenResult = f.MSXopen(ph, msxPtr)
-  f.free(msxPtr)
+  const msxOpenResult = f._MSXopen(ph, msxPtr)
+  f._free(msxPtr)
 
   expect(msxOpenResult, `MSXopen failed: ${msxOpenResult}`).toBe(0)
 
-  f.MSXsolveH()
-  f.MSXsolveQ()
-  f.MSXreport()
+  f._MSXsolveH()
+  f._MSXsolveQ()
+  f._MSXreport()
 
   const rpt = f.FS.readFile('net.rpt', { encoding: 'utf8' })
   const msxRpt = f.FS.readFile('msxreport.txt', { encoding: 'utf8' })
   expect(rpt.length, 'net.rpt must not be empty').toBeGreaterThan(0)
   expect(msxRpt.length, 'msxreport.txt must not be empty').toBeGreaterThan(0)
 
-  f.MSXclose()
-  f.EN_close(ph)
-  f.EN_deleteproject(ph)
+  f._MSXclose()
+  f._EN_close(ph)
+  f._EN_deleteproject(ph)
 })
 
 it.each(VERSIONS)('EPANET-MSX %s allows injecting hydraulics results file from EPANET', async (version) => {
@@ -66,43 +66,43 @@ it.each(VERSIONS)('EPANET-MSX %s allows injecting hydraulics results file from E
   f.FS.writeFile('net.inp', readFileSync(join(__dirname, 'network_msx.inp')))
   f.FS.writeFile('net.msx', readFileSync(join(__dirname, 'network_msx.msx')))
 
-  const phPtr = f.malloc(4)
-  f.EN_createproject(phPtr)
+  const phPtr = f._malloc(4)
+  f._EN_createproject(phPtr)
   const ph = f.getValue(phPtr, 'i32')
-  f.free(phPtr)
+  f._free(phPtr)
 
   const inpPtr = f.allocateUTF8('net.inp')
   const rptPtr = f.allocateUTF8('net.rpt')
   const outPtr = f.allocateUTF8('net.out')
-  const enOpenResult = f.EN_open(ph, inpPtr, rptPtr, outPtr)
-  f.free(inpPtr)
-  f.free(rptPtr)
-  f.free(outPtr)
+  const enOpenResult = f._EN_open(ph, inpPtr, rptPtr, outPtr)
+  f._free(inpPtr)
+  f._free(rptPtr)
+  f._free(outPtr)
 
   expect(enOpenResult, `EN_open failed: ${enOpenResult}`).toBe(0)
 
-  f.EN_solveH(ph)
+  f._EN_solveH(ph)
 
   const hydFilePtr = f.allocateUTF8('results.hyd')
-  const saveHydFileResult = f.EN_savehydfile(ph, hydFilePtr)
+  const saveHydFileResult = f._EN_savehydfile(ph, hydFilePtr)
   expect(saveHydFileResult, `EN_savehydfile failed: ${saveHydFileResult}`).toBe(0)
 
   const msxPtr = f.allocateUTF8('net.msx')
-  const msxOpenResult = f.MSXopen(ph, msxPtr)
-  f.free(msxPtr)
+  const msxOpenResult = f._MSXopen(ph, msxPtr)
+  f._free(msxPtr)
 
   expect(msxOpenResult, `MSXopen failed: ${msxOpenResult}`).toBe(0)
 
-  const useHydFileResult = f.MSXusehydfile(hydFilePtr)
-  f.free(hydFilePtr)
+  const useHydFileResult = f._MSXusehydfile(hydFilePtr)
+  f._free(hydFilePtr)
   expect(useHydFileResult, `MSXusehydfile failed: ${useHydFileResult}`).toBe(0)
 
-  f.MSXsolveQ()
-  f.MSXreport()
+  f._MSXsolveQ()
+  f._MSXreport()
 
   const msxOutPtr = f.allocateUTF8('msxout.bin')
-  f.MSXsaveoutfile(msxOutPtr)
-  f.free(msxOutPtr)
+  f._MSXsaveoutfile(msxOutPtr)
+  f._free(msxOutPtr)
 
   const rpt = f.FS.readFile('net.rpt', { encoding: 'utf8' })
   const msxRpt = f.FS.readFile('msxreport.txt', { encoding: 'utf8' })
@@ -111,13 +111,13 @@ it.each(VERSIONS)('EPANET-MSX %s allows injecting hydraulics results file from E
   expect(msxRpt.length, 'msxreport.txt must not be empty').toBeGreaterThan(0)
   expect(msxBin.length, 'msxout.bin must not be empty').toBeGreaterThan(0)
 
-  f.MSXclose()
-  f.EN_close(ph)
-  f.EN_deleteproject(ph)
+  f._MSXclose()
+  f._EN_close(ph)
+  f._EN_deleteproject(ph)
 })
 
 async function loadEpanet(version) {
-  const { default: factory } = await import(`../dist/${version}-msx/EpanetEngine.js`)
+  const { default: factory } = await import(`../dist/${version}-msx/index.js`)
   const wasmBinary = readFileSync(join(__dirname, `../dist/${version}-msx/EpanetEngine.wasm`))
-  return await loader(() => factory({ wasmBinary }))
+  return await factory({ wasmBinary })
 }
