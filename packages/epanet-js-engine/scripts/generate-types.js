@@ -109,8 +109,6 @@ indexLines.push(`  setValue(ptr: number, value: number, type: string): void`);
 indexLines.push(`  allocateUTF8(str: string): number`);
 indexLines.push(`  ccall(ident: string, returnType: string | null, argTypes: string[], args: any[]): any`);
 indexLines.push(`  cwrap(ident: string, returnType: string | null, argTypes: string[]): (...args: any[]) => any`);
-indexLines.push(`  malloc(size: number): number`);
-indexLines.push(`  free(ptr: number): void`);
 indexLines.push(`}`);
 indexLines.push(``);
 indexLines.push(`export interface EpanetEngineAPI extends EpanetEngine, EpanetEngineRuntime {}`);
