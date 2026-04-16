@@ -23,6 +23,16 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     ],
     outputArgDefs: [],
   },
+  openX: {
+    wasmFunctionName: "_EN_openX",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // inputFile
+      { typeHint: "string", isStringPtr: true }, // reportFile
+      { typeHint: "string", isStringPtr: true }, // binaryFile
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
   close: {
     wasmFunctionName: "_EN_close",
     inputArgDefs: [],
@@ -95,13 +105,23 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     ],
     outputArgDefs: [],
   },
-
-  openX: {
-    wasmFunctionName: "_EN_openX",
+  getTag: {
+    wasmFunctionName: "_EN_gettag",
     inputArgDefs: [
-      { typeHint: "string", isStringPtr: true }, // inputFile
-      { typeHint: "string", isStringPtr: true }, // reportFile
-      { typeHint: "string", isStringPtr: true }, // binaryFile
+      { typeHint: "enum" }, // EN_NODE, EN_LINK
+      { typeHint: "number" }, // index
+    ],
+    outputArgDefs: [
+      { name: "out_tag", type: "int" }
+    ],
+    minVersion: 20300,
+  },
+  setTag: {
+    wasmFunctionName: "_EN_settag",
+    inputArgDefs: [
+      { typeHint: "enum" }, // EN_NODE, EN_LINK
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // tag
     ],
     outputArgDefs: [],
     minVersion: 20300,
@@ -364,6 +384,18 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     ],
   },
 
+  setVertex: {
+    wasmFunctionName: "_EN_setvertex",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // vertex
+      { typeHint: "number" }, // x
+      { typeHint: "number" }, // y
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
+
   setVertices: {
     wasmFunctionName: "_EN_setvertices",
     inputArgDefs: [
@@ -461,6 +493,17 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [{ name: "value", type: "double" }],
   },
 
+  timeToNextEvent: {
+    wasmFunctionName: "_EN_timetonextevent",
+    inputArgDefs: [],
+    outputArgDefs: [
+      { name: "eventType", type: "int" },
+      { name: "duration", type: "int" },
+      { name: "elementIndex", type: "int" },
+    ],
+    minVersion: 20300,
+  },
+
   getResultIndex: {
     wasmFunctionName: "_EN_getresultindex",
     inputArgDefs: [
@@ -543,6 +586,16 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
       { typeHint: "length" }, // count (automatically calculated from values array)
     ],
     outputArgDefs: [],
+  },
+
+  loadPatternFile: {
+    wasmFunctionName: "_EN_loadpatternfile",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // filename
+      { typeHint: "number" }, // id
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
   },
 
   // Water Quality Analysis Functions
@@ -821,6 +874,25 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [],
   },
 
+  getControlEnabled: {
+    wasmFunctionName: "_EN_getcontrolenabled",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+    ],
+    outputArgDefs: [{ name: "out_enabled", type: "int" }],
+    minVersion: 20300,
+  },
+
+  setControlEnabled: {
+    wasmFunctionName: "_EN_setcontrolenabled",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // enabled
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
+
   // Rule-Based Control Functions
   addRule: {
     wasmFunctionName: "_EN_addrule",
@@ -973,6 +1045,25 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [],
   },
 
+  getRuleEnabled: {
+    wasmFunctionName: "_EN_getruleenabled",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+    ],
+    outputArgDefs: [{ name: "out_enabled", type: "int" }],
+    minVersion: 20300,
+  },
+
+  setRuleEnabled: {
+    wasmFunctionName: "_EN_setruleenabled",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // enabled
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
+
   // Data Curve Functions
   addCurve: {
     wasmFunctionName: "_EN_addcurve",
@@ -1017,6 +1108,16 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     wasmFunctionName: "_EN_getcurvetype",
     inputArgDefs: [{ typeHint: "number" }], // index
     outputArgDefs: [{ name: "type", type: "int" }],
+  },
+
+  setCurveType: {
+    wasmFunctionName: "_EN_setcurvetype",
+    inputArgDefs: [
+      { typeHint: "number" }, // index,
+      { typeHint: "enum" } // type
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
   },
 
   getCurveValue: {

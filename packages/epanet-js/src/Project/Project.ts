@@ -32,6 +32,7 @@ import {
   RuleOperator,
   RuleStatus,
   CurveType,
+  TimestepEvent,
 } from "../enum";
 import { apiDefinitions } from "../apiDefinitions";
 
@@ -88,8 +89,9 @@ class Project {
   // --- Declare Public API Methods with '!' ---
   getComment!: (objectType: ObjectType, index: number) => string;
   setComment!: (objectType: ObjectType, index: number, comment: string) => void;
+  getTag!: (objectType: ObjectType, index: number) => number;
+  setTag!: (objectType: ObjectType, index: number, tag: number) => void;
   openX!: (inputFile: string, reportFile: string, binaryFile: string) => void;
-  // ... other version-specific methods ...
 
   // Node Functions
   addNode!: (id: string, type: NodeType) => number;
@@ -158,6 +160,7 @@ class Project {
   setHeadCurveIndex!: (linkIndex: number, curveIndex: number) => void;
   getVertexCount!: (index: number) => number;
   getVertex!: (index: number, vertex: number) => { x: number; y: number };
+  setVertex!: (index: number, vertex: number, x: number, y: number) => void;
   setVertices!: (index: number, x: number[], y: number[]) => void;
 
   // Project Functions
@@ -188,6 +191,7 @@ class Project {
   setReport!: (format: string) => void;
   setStatusReport!: (level: StatusReport) => void;
   getStatistic!: (type: AnalysisStatistic) => number;
+  timeToNextEvent!: (type: TimestepEvent) => { eventType: number; duration: number; elementIndex: number; };
   getResultIndex!: (
     type: ObjectType.Node | ObjectType.Link,
     index: number,
@@ -204,6 +208,7 @@ class Project {
   setPatternValue!: (index: number, period: number, value: number) => void;
   getAveragePatternValue!: (index: number) => number;
   setPattern!: (index: number, values: number[]) => void;
+  loadPatternFile!: (filename: string, id: number) => void;
 
   // Water Quality Analysis Functions
   solveQ!: () => void;
@@ -303,6 +308,8 @@ class Project {
     nodeIndex: number,
     level: number,
   ) => void;
+  getControlEnabled!: (index: number) => number;
+  setControlEnabled!: (index: number, enabled: number) => void;
 
   // Rule-Based Control Functions
   addRule!: (rule: string) => void;
@@ -383,6 +390,8 @@ class Project {
     setting: number,
   ) => void;
   setRulePriority!: (index: number, priority: number) => void;
+  getRuleEnabled!: (index: number) => number;
+  setRuleEnabled!: (index: number, enabled: number) => void;
 
   // Data Curve Functions
   addCurve!: (id: string) => void;
@@ -392,6 +401,7 @@ class Project {
   setCurveId!: (index: number, id: string) => void;
   getCurveLenth!: (index: number) => number;
   getCurveType!: (index: number) => CurveType;
+  setCurveType!: (index: number, type: CurveType) => void;
   getCurveValue!: (
     curveIndex: number,
     pointIndex: number,
