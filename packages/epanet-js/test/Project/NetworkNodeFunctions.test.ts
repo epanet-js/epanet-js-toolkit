@@ -185,7 +185,7 @@ describe("Network Node Functions", () => {
       expect(minVolume).toEqual(1);
     });
 
-    test.skip("should set and get junction values in mixed units", () => {
+    test("should set and get junction values in mixed units", () => {
       ws.writeFile("net1.inp", mixedUnitsInp);
       model.open("net1.inp", "report.rpt", "out.bin");
 
