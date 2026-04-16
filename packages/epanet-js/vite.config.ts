@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { resolve } from "path";
-import { copyFileSync, mkdirSync } from "fs";
+import { copyFileSync, cpSync, mkdirSync, writeFileSync } from "fs";
 
 const ENGINE_VERSIONS = [
   "v2.2", "v2.2-msx",
@@ -60,6 +60,39 @@ export default defineConfig({
           const destDir = resolve(outDir, `engines/${version}`);
           mkdirSync(destDir, { recursive: true });
           copyFileSync(src, resolve(destDir, "EpanetEngine.wasm"));
+        }
+      },
+      closeBundle() {
+        // vite-plugin-dts generates dist/src/engines/[version]/index.d.ts as a
+        // shallow re-export from @epanet-js/epanet-engine. Replace each one with
+        // a self-contained declaration by copying the engine's types locally.
+        for (const version of ENGINE_VERSIONS) {
+          const engineSrcDir = resolve(
+            __dirname,
+            `node_modules/@epanet-js/epanet-engine/dist/${version}`
+          );
+          const declDestDir = resolve(__dirname, `dist/src/engines/${version}`);
+
+          mkdirSync(declDestDir, { recursive: true });
+
+          // Copy the engine's full declaration file alongside as engine-index.d.ts
+          copyFileSync(
+            resolve(engineSrcDir, "index.d.ts"),
+            resolve(declDestDir, "engine-index.d.ts")
+          );
+
+          // Copy the enums directory so relative imports in engine-index.d.ts resolve
+          cpSync(
+            resolve(engineSrcDir, "enums"),
+            resolve(declDestDir, "enums"),
+            { recursive: true }
+          );
+
+          // Overwrite the shallow re-export with a self-contained declaration
+          writeFileSync(
+            resolve(declDestDir, "index.d.ts"),
+            `export { default as EpanetEngine } from './engine-index';\n`
+          );
         }
       },
     },
