@@ -1,6 +1,19 @@
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { resolve } from "path";
+import { copyFileSync, mkdirSync } from "fs";
+
+const ENGINE_VERSIONS = [
+  "v2.2", "v2.2-msx",
+  "v2.3", "v2.3-msx",
+  "v2.3.1", "v2.3.1-msx",
+  "v2.3.2", "v2.3.2-msx",
+  "v2.3.3", "v2.3.3-msx",
+  "v2.3.4", "v2.3.4-msx",
+  "v2.3.5", "v2.3.5-msx",
+  "master", "master-msx",
+  "dev", "dev-msx",
+];
 
 export default defineConfig({
   build: {
@@ -33,5 +46,22 @@ export default defineConfig({
     },
     rollupOptions: {},
   },
-  plugins: [dts()],
+  plugins: [
+    dts(),
+    {
+      name: "copy-wasm",
+      writeBundle(options) {
+        const outDir = options.dir!;
+        for (const version of ENGINE_VERSIONS) {
+          const src = resolve(
+            __dirname,
+            `node_modules/@epanet-js/epanet-engine/dist/${version}/EpanetEngine.wasm`
+          );
+          const destDir = resolve(outDir, `engines/${version}`);
+          mkdirSync(destDir, { recursive: true });
+          copyFileSync(src, resolve(destDir, "EpanetEngine.wasm"));
+        }
+      },
+    },
+  ],
 });
