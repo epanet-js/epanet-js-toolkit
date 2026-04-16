@@ -96,13 +96,16 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [],
   },
 
-  //  // --- Example Version-Gated Function ---
-  //  openX: {
-  //    wasmFunctionName: "_EN_openX",
-  //    inputArgDefs: [{ typeHint: "number" }], // nodeIndex
-  //    outputArgDefs: [{ name: "value", type: "double" }],
-  //    minVersion: 20300, // Requires EPANET 2.3.0+
-  //  },
+  openX: {
+    wasmFunctionName: "_EN_openX",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // inputFile
+      { typeHint: "string", isStringPtr: true }, // reportFile
+      { typeHint: "string", isStringPtr: true }, // binaryFile
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
 
   // Node Functions
   deleteNode: {
