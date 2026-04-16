@@ -19,6 +19,96 @@
       "import": "./dist/slim/index.mjs",
       "require": "./dist/slim/index.cjs",
       "types": "./dist/src/slim/index.d.ts"
+    },
+    "./engines/v2.2": {
+      "import": "./dist/engines/v2.2/index.mjs",
+      "require": "./dist/engines/v2.2/index.cjs",
+      "types": "./dist/src/engines/v2.2/index.d.ts"
+    },
+    "./engines/v2.2-msx": {
+      "import": "./dist/engines/v2.2-msx/index.mjs",
+      "require": "./dist/engines/v2.2-msx/index.cjs",
+      "types": "./dist/src/engines/v2.2-msx/index.d.ts"
+    },
+    "./engines/v2.3": {
+      "import": "./dist/engines/v2.3/index.mjs",
+      "require": "./dist/engines/v2.3/index.cjs",
+      "types": "./dist/src/engines/v2.3/index.d.ts"
+    },
+    "./engines/v2.3-msx": {
+      "import": "./dist/engines/v2.3-msx/index.mjs",
+      "require": "./dist/engines/v2.3-msx/index.cjs",
+      "types": "./dist/src/engines/v2.3-msx/index.d.ts"
+    },
+    "./engines/v2.3.1": {
+      "import": "./dist/engines/v2.3.1/index.mjs",
+      "require": "./dist/engines/v2.3.1/index.cjs",
+      "types": "./dist/src/engines/v2.3.1/index.d.ts"
+    },
+    "./engines/v2.3.1-msx": {
+      "import": "./dist/engines/v2.3.1-msx/index.mjs",
+      "require": "./dist/engines/v2.3.1-msx/index.cjs",
+      "types": "./dist/src/engines/v2.3.1-msx/index.d.ts"
+    },
+    "./engines/v2.3.2": {
+      "import": "./dist/engines/v2.3.2/index.mjs",
+      "require": "./dist/engines/v2.3.2/index.cjs",
+      "types": "./dist/src/engines/v2.3.2/index.d.ts"
+    },
+    "./engines/v2.3.2-msx": {
+      "import": "./dist/engines/v2.3.2-msx/index.mjs",
+      "require": "./dist/engines/v2.3.2-msx/index.cjs",
+      "types": "./dist/src/engines/v2.3.2-msx/index.d.ts"
+    },
+    "./engines/v2.3.3": {
+      "import": "./dist/engines/v2.3.3/index.mjs",
+      "require": "./dist/engines/v2.3.3/index.cjs",
+      "types": "./dist/src/engines/v2.3.3/index.d.ts"
+    },
+    "./engines/v2.3.3-msx": {
+      "import": "./dist/engines/v2.3.3-msx/index.mjs",
+      "require": "./dist/engines/v2.3.3-msx/index.cjs",
+      "types": "./dist/src/engines/v2.3.3-msx/index.d.ts"
+    },
+    "./engines/v2.3.4": {
+      "import": "./dist/engines/v2.3.4/index.mjs",
+      "require": "./dist/engines/v2.3.4/index.cjs",
+      "types": "./dist/src/engines/v2.3.4/index.d.ts"
+    },
+    "./engines/v2.3.4-msx": {
+      "import": "./dist/engines/v2.3.4-msx/index.mjs",
+      "require": "./dist/engines/v2.3.4-msx/index.cjs",
+      "types": "./dist/src/engines/v2.3.4-msx/index.d.ts"
+    },
+    "./engines/v2.3.5": {
+      "import": "./dist/engines/v2.3.5/index.mjs",
+      "require": "./dist/engines/v2.3.5/index.cjs",
+      "types": "./dist/src/engines/v2.3.5/index.d.ts"
+    },
+    "./engines/v2.3.5-msx": {
+      "import": "./dist/engines/v2.3.5-msx/index.mjs",
+      "require": "./dist/engines/v2.3.5-msx/index.cjs",
+      "types": "./dist/src/engines/v2.3.5-msx/index.d.ts"
+    },
+    "./engines/master": {
+      "import": "./dist/engines/master/index.mjs",
+      "require": "./dist/engines/master/index.cjs",
+      "types": "./dist/src/engines/master/index.d.ts"
+    },
+    "./engines/master-msx": {
+      "import": "./dist/engines/master-msx/index.mjs",
+      "require": "./dist/engines/master-msx/index.cjs",
+      "types": "./dist/src/engines/master-msx/index.d.ts"
+    },
+    "./engines/dev": {
+      "import": "./dist/engines/dev/index.mjs",
+      "require": "./dist/engines/dev/index.cjs",
+      "types": "./dist/src/engines/dev/index.d.ts"
+    },
+    "./engines/dev-msx": {
+      "import": "./dist/engines/dev-msx/index.mjs",
+      "require": "./dist/engines/dev-msx/index.cjs",
+      "types": "./dist/src/engines/dev-msx/index.d.ts"
     }
   },
   "repository": {
