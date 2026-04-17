@@ -123,7 +123,9 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "test:coverage-ci": "vitest run --coverage --reporter=junit --outputFile=test-report.junit.xml",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "prepack": "node scripts/clean-package.mjs save",
+    "postpack": "node scripts/clean-package.mjs restore"
   },
   "dependencies": {
     "@epanet-js/epanet-engine": "workspace:*"
