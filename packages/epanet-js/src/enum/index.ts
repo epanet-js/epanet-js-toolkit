@@ -27,3 +27,7 @@ export { default as SourceType } from './SourceType';
 export { default as StatisticType } from './StatisticType';
 export { default as StatusReport } from './StatusReport';
 export { default as TimeParameter } from './TimeParameter';
+export { default as TimestepEvent } from './TimestepEvent';
+export { default as MsxConstant } from './MsxConstant';
+export { default as MsxChemicalSpeciesType } from './MsxChemicalSpeciesType';
+export { default as MsxChemicalSpeciesSourceType } from './MsxChemicalSpeciesSourceType';

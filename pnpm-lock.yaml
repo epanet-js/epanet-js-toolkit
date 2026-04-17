@@ -12,9 +12,9 @@ importers:
 
   packages/epanet-js:
     dependencies:
-      '@model-create/epanet-engine':
+      '@epanet-js/epanet-engine':
         specifier: workspace:*
-        version: link:../epanet-engine
+        version: link:../epanet-js-engine
     devDependencies:
       '@types/node':
         specifier: ^22.15.3

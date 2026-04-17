@@ -23,6 +23,16 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     ],
     outputArgDefs: [],
   },
+  openX: {
+    wasmFunctionName: "_EN_openX",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // inputFile
+      { typeHint: "string", isStringPtr: true }, // reportFile
+      { typeHint: "string", isStringPtr: true }, // binaryFile
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
   close: {
     wasmFunctionName: "_EN_close",
     inputArgDefs: [],
@@ -95,14 +105,27 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     ],
     outputArgDefs: [],
   },
-
-  //  // --- Example Version-Gated Function ---
-  //  openX: {
-  //    wasmFunctionName: "_EN_openX",
-  //    inputArgDefs: [{ typeHint: "number" }], // nodeIndex
-  //    outputArgDefs: [{ name: "value", type: "double" }],
-  //    minVersion: 20300, // Requires EPANET 2.3.0+
-  //  },
+  getTag: {
+    wasmFunctionName: "_EN_gettag",
+    inputArgDefs: [
+      { typeHint: "enum" }, // EN_NODE, EN_LINK
+      { typeHint: "number" }, // index
+    ],
+    outputArgDefs: [
+      { name: "out_tag", type: "char" }
+    ],
+    minVersion: 20300,
+  },
+  setTag: {
+    wasmFunctionName: "_EN_settag",
+    inputArgDefs: [
+      { typeHint: "enum" }, // EN_NODE, EN_LINK
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // tag
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
 
   // Node Functions
   deleteNode: {
@@ -361,6 +384,18 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     ],
   },
 
+  setVertex: {
+    wasmFunctionName: "_EN_setvertex",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // vertex
+      { typeHint: "number" }, // x
+      { typeHint: "number" }, // y
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
+
   setVertices: {
     wasmFunctionName: "_EN_setvertices",
     inputArgDefs: [
@@ -458,6 +493,17 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [{ name: "value", type: "double" }],
   },
 
+  timeToNextEvent: {
+    wasmFunctionName: "_EN_timetonextevent",
+    inputArgDefs: [],
+    outputArgDefs: [
+      { name: "eventType", type: "int" },
+      { name: "duration", type: "int" },
+      { name: "elementIndex", type: "int" },
+    ],
+    minVersion: 20300,
+  },
+
   getResultIndex: {
     wasmFunctionName: "_EN_getresultindex",
     inputArgDefs: [
@@ -540,6 +586,16 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
       { typeHint: "length" }, // count (automatically calculated from values array)
     ],
     outputArgDefs: [],
+  },
+
+  loadPatternFile: {
+    wasmFunctionName: "_EN_loadpatternfile",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // filename
+      { typeHint: "number" }, // id
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
   },
 
   // Water Quality Analysis Functions
@@ -818,6 +874,25 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [],
   },
 
+  getControlEnabled: {
+    wasmFunctionName: "_EN_getcontrolenabled",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+    ],
+    outputArgDefs: [{ name: "out_enabled", type: "int" }],
+    minVersion: 20300,
+  },
+
+  setControlEnabled: {
+    wasmFunctionName: "_EN_setcontrolenabled",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // enabled
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
+
   // Rule-Based Control Functions
   addRule: {
     wasmFunctionName: "_EN_addrule",
@@ -970,6 +1045,25 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [],
   },
 
+  getRuleEnabled: {
+    wasmFunctionName: "_EN_getruleenabled",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+    ],
+    outputArgDefs: [{ name: "out_enabled", type: "int" }],
+    minVersion: 20300,
+  },
+
+  setRuleEnabled: {
+    wasmFunctionName: "_EN_setruleenabled",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // enabled
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
+
   // Data Curve Functions
   addCurve: {
     wasmFunctionName: "_EN_addcurve",
@@ -1016,6 +1110,16 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [{ name: "type", type: "int" }],
   },
 
+  setCurveType: {
+    wasmFunctionName: "_EN_setcurvetype",
+    inputArgDefs: [
+      { typeHint: "number" }, // index,
+      { typeHint: "enum" } // type
+    ],
+    outputArgDefs: [],
+    minVersion: 20300,
+  },
+
   getCurveValue: {
     wasmFunctionName: "_EN_getcurvevalue",
     inputArgDefs: [
@@ -1048,6 +1152,305 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
       { typeHint: "length" }, // count (automatically calculated from xValues array)
     ],
     outputArgDefs: [],
+  },
+
+  // MSX functions
+  msxOpen: {
+    wasmFunctionName: "_MSXopen",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // fname
+    ],
+    outputArgDefs: [],
+    msxRequired: true
+  },
+
+  msxSolveH: {
+    wasmFunctionName: "_MSXsolveH",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxUseHydFile: {
+    wasmFunctionName: "_MSXusehydfile",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // fname
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSolveQ: {
+    wasmFunctionName: "_MSXsolveQ",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxInit: {
+    wasmFunctionName: "_MSXinit",
+    inputArgDefs: [
+      { typeHint: "number" }, // saveFlag
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxStep: {
+    wasmFunctionName: "_MSXstep",
+    inputArgDefs: [],
+    outputArgDefs: [
+      { name: "t", type: "double" },
+      { name: "tleft", type: "double" },
+    ],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSaveOutFile: {
+    wasmFunctionName: "_MSXsaveoutfile",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // fname
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSaveMsxFile: {
+    wasmFunctionName: "_MSXsavemsxfile",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // fname
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxReport: {
+    wasmFunctionName: "_MSXreport",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxClose: {
+    wasmFunctionName: "_MSXclose",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetIndex: {
+    wasmFunctionName: "_MSXgetindex",
+    inputArgDefs: [
+      { typeHint: "number" },                      // type (object type code)
+      { typeHint: "string", isStringPtr: true },   // id (name to look up)
+    ],
+    outputArgDefs: [{ name: "index", type: "int" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetIdLen: {
+    wasmFunctionName: "_MSXgetIDlen",
+    inputArgDefs: [
+      { typeHint: "number" },   // type
+      { typeHint: "number" },   // index
+    ],
+    outputArgDefs: [{ name: "len", type: "int" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetCount: {
+    wasmFunctionName: "_MSXgetcount",
+    inputArgDefs: [{ typeHint: "enum" }], // type
+    outputArgDefs: [{ name: "count", type: "int" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetSpecies: {
+    wasmFunctionName: "_MSXgetspecies",
+    inputArgDefs: [{ typeHint: "number" }], // index
+    outputArgDefs: [
+      { name: "type",  type: "int"    }, // MSX_BULK or MSX_WALL
+      { name: "units", type: "char"   }, // mass units string
+      { name: "aTol",  type: "double" }, // absolute tolerance
+      { name: "rTol",  type: "double" }, // relative tolerance
+    ],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetConstant: {
+    wasmFunctionName: "_MSXgetconstant",
+    inputArgDefs: [{ typeHint: "number" }], // index
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetParameter: {
+    wasmFunctionName: "_MSXgetparameter",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // param
+    ],
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetSource: {
+    wasmFunctionName: "_MSXgetsource",
+    inputArgDefs: [
+      { typeHint: "number" }, // node
+      { typeHint: "number" }, // species
+    ],
+    outputArgDefs: [
+      { name: "type",  type: "int"    }, // source type code
+      { name: "level", type: "double" }, // baseline concentration
+      { name: "pat",   type: "int"    }, // pattern index
+    ],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetPatternLen: {
+    wasmFunctionName: "_MSXgetpatternlen",
+    inputArgDefs: [{ typeHint: "number" }], // pat
+    outputArgDefs: [{ name: "len", type: "int" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetPatternValue: {
+    wasmFunctionName: "_MSXgetpatternvalue",
+    inputArgDefs: [
+      { typeHint: "number" }, // pat
+      { typeHint: "number" }, // period
+    ],
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetInitQual: {
+    wasmFunctionName: "_MSXgetinitqual",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // species
+    ],
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetQual: {
+    wasmFunctionName: "_MSXgetqual",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // species
+    ],
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetConstant: {
+    wasmFunctionName: "_MSXsetconstant",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // value
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetParameter: {
+    wasmFunctionName: "_MSXsetparameter",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // param
+      { typeHint: "number" }, // value
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetInitQual: {
+    wasmFunctionName: "_MSXsetinitqual",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // species
+      { typeHint: "number" }, // value
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetSource: {
+    wasmFunctionName: "_MSXsetsource",
+    inputArgDefs: [
+      { typeHint: "number" }, // node
+      { typeHint: "number" }, // species
+      { typeHint: "enum" },   // type (MSX_NOSOURCE, MSX_CONCEN, etc.)
+      { typeHint: "number" }, // level
+      { typeHint: "number" }, // pat
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetPatternValue: {
+    wasmFunctionName: "_MSXsetpatternvalue",
+    inputArgDefs: [
+      { typeHint: "number" }, // pat
+      { typeHint: "number" }, // period
+      { typeHint: "number" }, // value
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetPattern: {
+    wasmFunctionName: "_MSXsetpattern",
+    inputArgDefs: [
+      { typeHint: "number" },   // pat
+      { typeHint: "double[]" }, // mult (multiplier array)
+      { typeHint: "length" },   // len (auto-calculated from mult)
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxAddPattern: {
+    wasmFunctionName: "_MSXaddpattern",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // id
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
   },
 
   // ... Define ALL other EPANET functions ...

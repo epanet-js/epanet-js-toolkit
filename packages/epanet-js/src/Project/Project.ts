@@ -5,9 +5,10 @@ import {
   // Import other needed types/enums
 } from "../types"; // Adjust path if types are elsewhere
 
-import type { EpanetModule } from "@model-create/epanet-engine";
+import type { EpanetEngineAPI } from "@epanet-js/epanet-engine";
 
 import { Workspace } from "../";
+import { Workspace as SlimWorkspace } from "../slim";
 import {
   NodeType,
   NodeProperty,
@@ -31,19 +32,23 @@ import {
   RuleOperator,
   RuleStatus,
   CurveType,
+  TimestepEvent,
+  MsxChemicalSpeciesSourceType,
+  MsxChemicalSpeciesType,
 } from "../enum";
 import { apiDefinitions } from "../apiDefinitions";
 
 interface FinalizerHeldValue {
   projectHandle: number;
-  enInstance: EpanetModule;
+  enInstance: EpanetEngineAPI;
 }
 
 class Project {
-  _ws: Workspace;
-  _EN: EpanetModule | undefined; // Use the combined type EpanetModule
+  _ws: Workspace | SlimWorkspace;
+  _EN: EpanetEngineAPI | undefined; // Use the combined type EpanetEngineApi
   private _projectHandle!: number; // Assert definite assignment
   private _epanetVersionInt: number = -1;
+  private _hasMsxSupport: boolean = false;
   private readonly _absoluteMinVersion = 20200;
 
   private static readonly _finalizer =
@@ -72,7 +77,7 @@ class Project {
             }
           } else {
             console.warn(
-              `Finalizer: Function ${funcName} not found in EpanetModule instance during cleanup for handle ${projectHandle}.`,
+              `Finalizer: Function ${funcName} not found in EpanetEngineApi instance during cleanup for handle ${projectHandle}.`,
             );
           }
         } else {
@@ -87,8 +92,9 @@ class Project {
   // --- Declare Public API Methods with '!' ---
   getComment!: (objectType: ObjectType, index: number) => string;
   setComment!: (objectType: ObjectType, index: number, comment: string) => void;
+  getTag!: (objectType: ObjectType, index: number) => number;
+  setTag!: (objectType: ObjectType, index: number, tag: number) => void;
   openX!: (inputFile: string, reportFile: string, binaryFile: string) => void;
-  // ... other version-specific methods ...
 
   // Node Functions
   addNode!: (id: string, type: NodeType) => number;
@@ -157,6 +163,7 @@ class Project {
   setHeadCurveIndex!: (linkIndex: number, curveIndex: number) => void;
   getVertexCount!: (index: number) => number;
   getVertex!: (index: number, vertex: number) => { x: number; y: number };
+  setVertex!: (index: number, vertex: number, x: number, y: number) => void;
   setVertices!: (index: number, x: number[], y: number[]) => void;
 
   // Project Functions
@@ -187,6 +194,7 @@ class Project {
   setReport!: (format: string) => void;
   setStatusReport!: (level: StatusReport) => void;
   getStatistic!: (type: AnalysisStatistic) => number;
+  timeToNextEvent!: (type: TimestepEvent) => { eventType: number; duration: number; elementIndex: number; };
   getResultIndex!: (
     type: ObjectType.Node | ObjectType.Link,
     index: number,
@@ -203,6 +211,7 @@ class Project {
   setPatternValue!: (index: number, period: number, value: number) => void;
   getAveragePatternValue!: (index: number) => number;
   setPattern!: (index: number, values: number[]) => void;
+  loadPatternFile!: (filename: string, id: number) => void;
 
   // Water Quality Analysis Functions
   solveQ!: () => void;
@@ -302,6 +311,8 @@ class Project {
     nodeIndex: number,
     level: number,
   ) => void;
+  getControlEnabled!: (index: number) => number;
+  setControlEnabled!: (index: number, enabled: number) => void;
 
   // Rule-Based Control Functions
   addRule!: (rule: string) => void;
@@ -382,6 +393,8 @@ class Project {
     setting: number,
   ) => void;
   setRulePriority!: (index: number, priority: number) => void;
+  getRuleEnabled!: (index: number) => number;
+  setRuleEnabled!: (index: number, enabled: number) => void;
 
   // Data Curve Functions
   addCurve!: (id: string) => void;
@@ -391,6 +404,7 @@ class Project {
   setCurveId!: (index: number, id: string) => void;
   getCurveLenth!: (index: number) => number;
   getCurveType!: (index: number) => CurveType;
+  setCurveType!: (index: number, type: CurveType) => void;
   getCurveValue!: (
     curveIndex: number,
     pointIndex: number,
@@ -405,6 +419,42 @@ class Project {
     y: number,
   ) => void;
   setCurve!: (index: number, xValues: number[], yValues: number[]) => void;
+
+  // MSX Functions
+  msxOpen!: (msxFilePath: string) => void;
+  msxSolveH!: () => void;
+  msxUseHydFile!: (hydFilePath: string) => void;
+  msxSolveQ!: () => void;
+  msxInit!: (saveFlag: number) => void;
+  msxStep!: () => { t: number; tleft: number; };
+  msxSaveOutFile!: (outFilePath: string) => void;
+  msxSaveMsxFile!: (msxFilePath: string) => void;
+  msxReport!: () => void;
+  msxClose!: () => void;
+  msxGetIndex!: (type: number, id: string) => number;
+  msxGetIdLen!: (type: number, id: number) => number;
+  msxGetCount!: (type: number) => number;
+  
+  msxGetSpecies!: (index: number) => { type: MsxChemicalSpeciesType; units: string; aTol: number; rTol: number; };
+  
+  msxGetParameter!: (type: number, index: number, param: number) => number;
+  msxSetParameter!: (type: number, index: number, param: number, value: number) => void;
+  
+  msxGetInitQual!: (type: number, index: number, species: number) => number;
+  msxGetQual!: (type: number, index: number, species: number) => number;
+  msxSetInitQual!: (type: number, index: number, species: number, value: number) => void;
+  
+  msxSetConstant!: (index: number, value: number) => void;
+  msxGetConstant!: (index: number) => number;
+  
+  msxGetSource!: (node: number, species: number) => { type: MsxChemicalSpeciesSourceType; level: number; pat: number; };
+  msxSetSource!: (node: number, species: number, type: MsxChemicalSpeciesSourceType, level: number, pat: number) => void;
+  
+  msxAddPattern!: (id: string) => void;
+  msxSetPatternValue!: (pat: number, period: number, value: number) => void;
+  msxSetPattern!: (pat: number, mult: number[]) => void;
+  msxGetPatternLen!: (pat: number) => number;
+  msxGetPatternValue!: (pat: number, period: number) => number;
 
   // Complex Functions
   getCurve(index: number): {
@@ -470,6 +520,31 @@ class Project {
     }
   }
 
+  msxGetId(type: number, index: number): string {
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+    if (!this._hasMsxSupport) {
+      throw new Error("Method 'msxGetId' requires EPANET MSX, but is not loaded.");
+    }
+
+    const bufferSize = 64;
+    const bufferPtr = this._EN._malloc(bufferSize);
+    if (bufferPtr === 0) {
+      throw new Error("Memory allocation failed for msxGetId.");
+    }
+
+    try {
+      const errorCode = (this._EN as any)._MSXgetID(type, index, bufferPtr, bufferSize);
+      this._checkError(errorCode);
+      return this._EN.UTF8ToString(bufferPtr);
+    } finally {
+      this._EN._free(bufferPtr);
+    }
+  }
+
   setLinkType(
     index: number,
     linkType: LinkType,
@@ -485,7 +560,7 @@ class Project {
 
     try {
       // Initialize the pointer with the input index using HEAP32
-      this._EN.HEAP32[indexPtr >> 2] = index;
+      this._EN.setValue(indexPtr, index, 'i32');
 
       // Call the WASM function
       const errorCode = this._EN._EN_setlinktype(
@@ -508,7 +583,7 @@ class Project {
     }
   }
 
-  constructor(ws: Workspace) {
+  constructor(ws: Workspace | SlimWorkspace) {
     this._ws = ws;
 
     // Check if module is loaded using the new isLoaded property
@@ -523,10 +598,11 @@ class Project {
   private _initializeProject(): void {
     // Create the project FIRST, as version check might now need it (or not)
     // But subsequent API calls definitely will. Assert assignment with !
-    this._EN = this._ws.instance as EpanetModule;
+    this._EN = this._ws.instance as EpanetEngineAPI;
     this._projectHandle = this._createProject();
 
     this._epanetVersionInt = this._getAndVerifyEpanetVersion();
+    this._hasMsxSupport = this._getMsxSupport();
     this._buildApiMethods();
 
     // Register this object with the finalizer
@@ -542,7 +618,7 @@ class Project {
       return (...args: any[]) => {
         // Check if module is now loaded using the new isLoaded property
         if (this._ws.isLoaded) {
-          this._EN = this._ws.instance as EpanetModule;
+          this._EN = this._ws.instance as EpanetEngineAPI;
           if (this._ws.isLoaded) {
             // Module is now loaded, initialize the project
             this._initializeProject();
@@ -660,6 +736,17 @@ class Project {
     return actualVersion;
   }
 
+  private _getMsxSupport(): boolean {
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+
+    const genericEngine = this._EN as any;
+    return genericEngine["_MSXclose"] !== undefined;
+  }
+
   private _formatVersionInt(versionInt: number): string {
     if (versionInt < 0) return "Unknown";
     const major = Math.floor(versionInt / 10000);
@@ -706,6 +793,12 @@ class Project {
           )}, loaded is v${this._formatVersionInt(this._epanetVersionInt)}.`,
         );
       }
+
+      if (definition.msxRequired && !this._hasMsxSupport) {
+        throw new Error(
+          `Method '${methodName}' requires EPANET MSX, but is not loaded.`,
+        );
+      }
       // --- End Runtime Version Check ---
 
       const wasmFunction = EN[wasmFunctionName] as Function | undefined;
@@ -719,7 +812,8 @@ class Project {
       let outputPointers: number[] = [];
       let inputStringPointers: number[] = []; // Track allocated input string pointers
       let arrayPointers: number[] = []; // Track allocated array pointers
-      const processedWasmArgs: any[] = [this._projectHandle]; // Start with project handle
+      const emitProjectHandle = definition.prependProjectHandle !== undefined && definition.prependProjectHandle === false;
+      const processedWasmArgs: any[] = emitProjectHandle ? [] : [this._projectHandle]; // Start with project handle
 
       try {
         // Validate input argument count (excluding length parameters)
@@ -757,13 +851,11 @@ class Project {
         definition.inputArgDefs?.forEach((inputDef, index) => {
           const arg = userArgs[index];
           if (inputDef.isStringPtr && typeof arg === "string") {
-            const utf8Length = EN.lengthBytesUTF8(arg) + 1; // Null terminator
-            const ptr = EN._malloc(utf8Length);
+            const ptr = EN.allocateUTF8(arg);
             if (ptr === 0)
               throw new Error(
                 `Malloc failed for input string arg ${index} in ${methodName}`,
               );
-            EN.stringToUTF8(arg, ptr, utf8Length);
             inputStringPointers.push(ptr); // Remember to free this
             processedWasmArgs.push(ptr); // Add pointer to WASM args
           } else if (inputDef.typeHint === "double[]") {
@@ -925,7 +1017,9 @@ class Project {
       );
     }
 
-    EN.HEAPF64.set(typedArray, dataPtr / typedArray.BYTES_PER_ELEMENT);
+    typedArray.forEach((value, i) => {
+      EN.setValue(dataPtr + i*typedArray.BYTES_PER_ELEMENT, value, 'double');
+    })
 
     return dataPtr;
   }
