@@ -72,13 +72,15 @@ describe("MSX Functions", () => {
 
   describe("Constants", () => {
     test("msxGetConstant returns Ka=10.0 for constant index 1", () => {
-      const value = model.msxGetConstant(1);
+      const index = model.msxGetIndex(MsxConstant.Constant, "Ka");
+      const value = model.msxGetConstant(index);
       expect(value).toBeCloseTo(10.0);
     });
 
     test("msxSetConstant changes the value and msxGetConstant reads it back", () => {
-      model.msxSetConstant(1, 15.0);
-      const value = model.msxGetConstant(1);
+      const index = model.msxGetIndex(MsxConstant.Constant, "Ka");
+      model.msxSetConstant(index, 15.0);
+      const value = model.msxGetConstant(index);
       expect(value).toBeCloseTo(15.0);
     });
   });
@@ -86,14 +88,16 @@ describe("MSX Functions", () => {
   describe("Initial Quality", () => {
     test("msxGetInitQual returns 10.0 for AS3 at Source node", () => {
       const sourceIndex = model.getNodeIndex("Source");
-      const value = model.msxGetInitQual(MsxConstant.Node, sourceIndex, 1 /* AS3 */);
+      const speciesIndex = model.msxGetIndex(MsxConstant.Species, "AS3");
+      const value = model.msxGetInitQual(MsxConstant.Node, sourceIndex, speciesIndex);
       expect(value).toBeCloseTo(10.0);
     });
 
     test("msxSetInitQual sets a new value and msxGetInitQual reads it back", () => {
       const sourceIndex = model.getNodeIndex("Source");
+      const speciesIndex = model.msxGetIndex(MsxConstant.Species, "AS3");
       model.msxSetInitQual(MsxConstant.Node, sourceIndex, 1, 12.0);
-      const value = model.msxGetInitQual(MsxConstant.Node, sourceIndex, 1);
+      const value = model.msxGetInitQual(MsxConstant.Node, sourceIndex, speciesIndex);
       expect(value).toBeCloseTo(12.0);
     });
   });
@@ -101,7 +105,8 @@ describe("MSX Functions", () => {
   describe("Water Quality Results", () => {
     test("msxGetQual returns a numeric value for AS3 at Source node", () => {
       const sourceIndex = model.getNodeIndex("Source");
-      const value = model.msxGetQual(MsxConstant.Node, sourceIndex, 1 /* AS3 */);
+      const speciesIndex = model.msxGetIndex(MsxConstant.Species, "AS3");
+      const value = model.msxGetQual(MsxConstant.Node, sourceIndex, speciesIndex);
       expect(typeof value).toBe("number");
     });
   });
@@ -109,10 +114,15 @@ describe("MSX Functions", () => {
   describe("Sources", () => {
     test("msxGetSource reads source info at Source node for AS3", () => {
       const sourceIndex = model.getNodeIndex("Source");
-      const source = model.msxGetSource(sourceIndex, 1 /* AS3 */);
-      expect(typeof source.type).toBe("number");
-      expect(typeof source.level).toBe("number");
-      expect(typeof source.pat).toBe("number");
+      const speciesIndex = model.msxGetIndex(MsxConstant.Species, "AS3");
+      
+      const source = model.msxGetSource(sourceIndex, speciesIndex);
+      
+      expect(source).toEqual({
+        type: MsxChemicalSpeciesSourceType.NoSource,
+        level: 0,
+        pat: 0
+      });
     });
 
     test("msxSetSource sets a CONCEN source and resets to NOSOURCE", () => {
