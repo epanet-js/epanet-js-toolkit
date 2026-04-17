@@ -1,7 +1,14 @@
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { resolve } from "path";
-import { copyFileSync, cpSync, mkdirSync, writeFileSync } from "fs";
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync
+} from "fs";
 
 const ENGINE_VERSIONS = [
   "v2.2", "v2.2-msx",
@@ -93,6 +100,41 @@ export default defineConfig({
             resolve(declDestDir, "index.d.ts"),
             `export { default as EpanetEngine } from './engine-index';\n`
           );
+        }
+
+        // Roll up @epanet-js/epanet-engine references so the published
+        // declarations have no dependency on the workspace-internal package.
+
+        // 1. types.d.ts — remove EpanetEngine import, widen keyof EpanetEngine → string
+        const typesDecl = resolve(__dirname, "dist/src/types.d.ts");
+        if (existsSync(typesDecl)) {
+          let content = readFileSync(typesDecl, "utf8");
+          content = content
+            .replace(/^import\s+\{[^}]*\bEpanetEngine\b[^}]*\}\s+from\s+'@epanet-js\/epanet-engine'\s*;\n/gm, "")
+            .replace(/\bkeyof\s+EpanetEngine\b/g, "string");
+          writeFileSync(typesDecl, content);
+        }
+
+        // 2. Project.d.ts — redirect the root engine import to the local LTS copy
+        const projectDecl = resolve(__dirname, "dist/src/Project/Project.d.ts");
+        if (existsSync(projectDecl)) {
+          let content = readFileSync(projectDecl, "utf8");
+          content = content.replace(
+            /from '@epanet-js\/epanet-engine'/g,
+            "from '../engines/v2.3.5/engine-index'"
+          );
+          writeFileSync(projectDecl, content);
+        }
+
+        // 3. SlimWorkspace.d.ts — redirect all version-specific engine imports to local copies
+        const slimDecl = resolve(__dirname, "dist/src/Workspace/SlimWorkspace.d.ts");
+        if (existsSync(slimDecl)) {
+          let content = readFileSync(slimDecl, "utf8");
+          content = content.replace(
+            /from '@epanet-js\/epanet-engine\/([^']+)'/g,
+            "from '../engines/$1/engine-index'"
+          );
+          writeFileSync(slimDecl, content);
         }
       },
     },
