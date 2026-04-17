@@ -429,23 +429,23 @@ class Project {
   msxSaveMsxFile!: (msxFilePath: string) => void;
   msxReport!: () => void;
   msxClose!: () => void;
-  msxGetIndex!: (type: number, id: string) => { id: number; };
-  msxGetIdLen!: (type: number, id: string) => { len: number; };
-  msxGetCount!: (type: number) => { count: number; };
+  msxGetIndex!: (type: number, id: string) => number;
+  msxGetIdLen!: (type: number, id: string) => number;
+  msxGetCount!: (type: number) => number;
   msxGetSpecies!: (index: number) => { type: number; units: string; aTol: number; rTol: number; };
-  msxGetConstant!: (index: number) => { value: number; };
-  msxGetParameter!: (type: number, index: number, param: number) => { value: number; };
+  msxGetConstant!: (index: number) => number;
+  msxGetParameter!: (type: number, index: number, param: number) => number;
   msxGetSource!: (node: number, species: number) => { type: number; level: number; pat: number; };
-  msxGetPatternLen!: (pat: number) => { len: number };
-  msxGetPatternValue!: (pat: number, period: number) => { value: number };
-  msxGetInitQual!: (type: number, index: number, species: number) => { value: number };
-  msxGetQual!: (type: number, index: number, species: number) => { value: number };
+  msxGetPatternLen!: (pat: number) => number;
+  msxGetPatternValue!: (pat: number, period: number) => number;
+  msxGetInitQual!: (type: number, index: number, species: number) => number;
+  msxGetQual!: (type: number, index: number, species: number) => number;
   msxSetConstant!: (index: number, value: number) => void;
   msxSetParameter!: (type: number, index: number, param: number, value: number) => void;
   msxSetInitQual!: (type: number, index: number, species: number, value: number) => void;
   msxSetSource!: (node: number, species: number, type: number, level: number, pat: number) => void;
   msxSetPatternValue!: (pat: number, period: number, value: number) => void;
-  msxSetPattern!: (pat: number, mult: number[], length: number) => void;
+  msxSetPattern!: (pat: number, mult: number[]) => void;
   msxAddPattern!: (id: string) => void;
 
   // Complex Functions
