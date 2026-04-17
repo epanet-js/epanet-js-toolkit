@@ -418,6 +418,36 @@ class Project {
   ) => void;
   setCurve!: (index: number, xValues: number[], yValues: number[]) => void;
 
+  // MSX Functions
+  msxOpen!: (msxFilePath: string) => void;
+  msxSolveH!: () => void;
+  msxUseHydFile!: (hydFilePath: string) => void;
+  msxSolveQ!: () => void;
+  msxInit!: (saveFlag: number) => void;
+  msxStep!: () => { t: number; tleft: number; };
+  msxSaveOutFile!: (outFilePath: string) => void;
+  msxSaveMsxFile!: (msxFilePath: string) => void;
+  msxReport!: () => void;
+  msxClose!: () => void;
+  msxGetIndex!: (type: number, id: string) => { id: number; };
+  msxGetIdLen!: (type: number, id: string) => { len: number; };
+  msxGetCount!: (type: number) => { count: number; };
+  msxGetSpecies!: (index: number) => { type: number; units: string; aTol: number; rTol: number; };
+  msxGetConstant!: (index: number) => { value: number; };
+  msxGetParameter!: (type: number, index: number, param: number) => { value: number; };
+  msxGetSource!: (node: number, species: number) => { type: number; level: number; pat: number; };
+  msxGetPatternLen!: (pat: number) => { len: number };
+  msxGetPatternValue!: (pat: number, period: number) => { value: number };
+  msxGetInitQual!: (type: number, index: number, species: number) => { value: number };
+  msxGetQual!: (type: number, index: number, species: number) => { value: number };
+  msxSetConstant!: (index: number, value: number) => void;
+  msxSetParameter!: (type: number, index: number, param: number, value: number) => void;
+  msxSetInitQual!: (type: number, index: number, species: number, value: number) => void;
+  msxSetSource!: (node: number, species: number, type: number, level: number, pat: number) => void;
+  msxSetPatternValue!: (pat: number, period: number, value: number) => void;
+  msxSetPattern!: (pat: number, mult: number[], length: number) => void;
+  msxAddPattern!: (id: string) => void;
+
   // Complex Functions
   getCurve(index: number): {
     id: string;

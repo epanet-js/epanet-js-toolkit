@@ -112,7 +112,7 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
       { typeHint: "number" }, // index
     ],
     outputArgDefs: [
-      { name: "out_tag", type: "int" }
+      { name: "out_tag", type: "char" }
     ],
     minVersion: 20300,
   },
@@ -1247,40 +1247,22 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     prependProjectHandle: false,
   },
 
-  msxENOpen: {
-    wasmFunctionName: "_MSXENopen",
-    inputArgDefs: [
-      { typeHint: "string", isStringPtr: true }, // inpFile
-      { typeHint: "string", isStringPtr: true }, // rptFile
-      { typeHint: "string", isStringPtr: true }, // outFile
-    ],
-    outputArgDefs: [],
-    msxRequired: true,
-  },
-
-  msxENClose: {
-    wasmFunctionName: "_MSXENclose",
-    inputArgDefs: [],
-    outputArgDefs: [],
-    msxRequired: true,
-  },
-
   msxGetIndex: {
     wasmFunctionName: "_MSXgetindex",
     inputArgDefs: [
-      { typeHint: "enum" },                      // type (object type code)
-      { typeHint: "string", isStringPtr: true }, // id (name to look up)
+      { typeHint: "number" },                      // type (object type code)
+      { typeHint: "string", isStringPtr: true },   // id (name to look up)
     ],
     outputArgDefs: [{ name: "index", type: "int" }],
     msxRequired: true,
     prependProjectHandle: false,
   },
 
-  msxGetIDLen: {
+  msxGetIdLen: {
     wasmFunctionName: "_MSXgetIDlen",
     inputArgDefs: [
-      { typeHint: "enum" },   // type
-      { typeHint: "number" }, // index
+      { typeHint: "number" },   // type
+      { typeHint: "number" },   // index
     ],
     outputArgDefs: [{ name: "len", type: "int" }],
     msxRequired: true,
