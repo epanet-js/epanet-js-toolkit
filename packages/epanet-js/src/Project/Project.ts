@@ -482,6 +482,31 @@ class Project {
     }
   }
 
+  msxGetId(type: number, index: number): string {
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+    if (!this._hasMsxSupport) {
+      throw new Error("Method 'msxGetId' requires EPANET MSX, but is not loaded.");
+    }
+
+    const bufferSize = 64;
+    const bufferPtr = this._EN._malloc(bufferSize);
+    if (bufferPtr === 0) {
+      throw new Error("Memory allocation failed for msxGetId.");
+    }
+
+    try {
+      const errorCode = (this._EN as any)._MSXgetID(type, index, bufferPtr, bufferSize);
+      this._checkError(errorCode);
+      return this._EN.UTF8ToString(bufferPtr);
+    } finally {
+      this._EN._free(bufferPtr);
+    }
+  }
+
   setLinkType(
     index: number,
     linkType: LinkType,
