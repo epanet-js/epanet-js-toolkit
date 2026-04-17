@@ -38,6 +38,8 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install
+      - name: Running build
+        run: pnpm build
       - name: Running tests
         run: pnpm test
 
@@ -48,6 +50,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: "packages/epanet-js/test-report.junit.xml"
           fail_ci_if_error: true
-
-      - name: Running build
-        run: pnpm build
