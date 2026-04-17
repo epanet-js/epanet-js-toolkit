@@ -46,6 +46,7 @@ class Project {
   _EN: EpanetEngineAPI | undefined; // Use the combined type EpanetEngineApi
   private _projectHandle!: number; // Assert definite assignment
   private _epanetVersionInt: number = -1;
+  private _hasMsxSupport: boolean = false;
   private readonly _absoluteMinVersion = 20200;
 
   private static readonly _finalizer =
@@ -538,6 +539,7 @@ class Project {
     this._projectHandle = this._createProject();
 
     this._epanetVersionInt = this._getAndVerifyEpanetVersion();
+    this._hasMsxSupport = this._getMsxSupport();
     this._buildApiMethods();
 
     // Register this object with the finalizer
@@ -671,6 +673,17 @@ class Project {
     return actualVersion;
   }
 
+  private _getMsxSupport(): boolean {
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+
+    const genericEngine = this._EN as any;
+    return genericEngine["_MSXclose"] !== undefined;
+  }
+
   private _formatVersionInt(versionInt: number): string {
     if (versionInt < 0) return "Unknown";
     const major = Math.floor(versionInt / 10000);
@@ -717,6 +730,12 @@ class Project {
           )}, loaded is v${this._formatVersionInt(this._epanetVersionInt)}.`,
         );
       }
+
+      if (definition.msxRequired && !this._hasMsxSupport) {
+        throw new Error(
+          `Method '${methodName}' requires EPANET MSX, but is not loaded.`,
+        );
+      }
       // --- End Runtime Version Check ---
 
       const wasmFunction = EN[wasmFunctionName] as Function | undefined;
@@ -730,7 +749,8 @@ class Project {
       let outputPointers: number[] = [];
       let inputStringPointers: number[] = []; // Track allocated input string pointers
       let arrayPointers: number[] = []; // Track allocated array pointers
-      const processedWasmArgs: any[] = [this._projectHandle]; // Start with project handle
+      const emitProjectHandle = definition.prependProjectHandle !== undefined && definition.prependProjectHandle === false;
+      const processedWasmArgs: any[] = emitProjectHandle ? [] : [this._projectHandle]; // Start with project handle
 
       try {
         // Validate input argument count (excluding length parameters)

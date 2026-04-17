@@ -50,6 +50,12 @@ export interface ApiFunctionDefinition {
   /** Optional: Minimum EPANET version required */
   minVersion?: number;
 
+  /** Optional: EPANET MSX support required */
+  msxRequired?: boolean;
+
+  /** Optional: preprends project handle? */
+  prependProjectHandle?: boolean;
+
   /** Optional: Custom formatting for return values */
   postProcess?: (results: any[]) => any;
 

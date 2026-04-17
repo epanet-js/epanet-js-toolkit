@@ -1154,5 +1154,322 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [],
   },
 
+  // MSX functions
+  msxOpen: {
+    wasmFunctionName: "_MSXopen",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // fname
+    ],
+    outputArgDefs: [],
+    msxRequired: true
+  },
+
+  msxSolveH: {
+    wasmFunctionName: "_MSXsolveH",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxUseHydFile: {
+    wasmFunctionName: "_MSXusehydfile",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // fname
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSolveQ: {
+    wasmFunctionName: "_MSXsolveQ",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxInit: {
+    wasmFunctionName: "_MSXinit",
+    inputArgDefs: [
+      { typeHint: "number" }, // saveFlag
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxStep: {
+    wasmFunctionName: "_MSXstep",
+    inputArgDefs: [],
+    outputArgDefs: [
+      { name: "t", type: "double" },
+      { name: "tleft", type: "double" },
+    ],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSaveOutFile: {
+    wasmFunctionName: "_MSXsaveoutfile",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // fname
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSaveMsxFile: {
+    wasmFunctionName: "_MSXsavemsxfile",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // fname
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxReport: {
+    wasmFunctionName: "_MSXreport",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxClose: {
+    wasmFunctionName: "_MSXclose",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxENOpen: {
+    wasmFunctionName: "_MSXENopen",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // inpFile
+      { typeHint: "string", isStringPtr: true }, // rptFile
+      { typeHint: "string", isStringPtr: true }, // outFile
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+  },
+
+  msxENClose: {
+    wasmFunctionName: "_MSXENclose",
+    inputArgDefs: [],
+    outputArgDefs: [],
+    msxRequired: true,
+  },
+
+  msxGetIndex: {
+    wasmFunctionName: "_MSXgetindex",
+    inputArgDefs: [
+      { typeHint: "enum" },                      // type (object type code)
+      { typeHint: "string", isStringPtr: true }, // id (name to look up)
+    ],
+    outputArgDefs: [{ name: "index", type: "int" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetIDLen: {
+    wasmFunctionName: "_MSXgetIDlen",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type
+      { typeHint: "number" }, // index
+    ],
+    outputArgDefs: [{ name: "len", type: "int" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetCount: {
+    wasmFunctionName: "_MSXgetcount",
+    inputArgDefs: [{ typeHint: "enum" }], // type
+    outputArgDefs: [{ name: "count", type: "int" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetSpecies: {
+    wasmFunctionName: "_MSXgetspecies",
+    inputArgDefs: [{ typeHint: "number" }], // index
+    outputArgDefs: [
+      { name: "type",  type: "int"    }, // MSX_BULK or MSX_WALL
+      { name: "units", type: "char"   }, // mass units string
+      { name: "aTol",  type: "double" }, // absolute tolerance
+      { name: "rTol",  type: "double" }, // relative tolerance
+    ],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetConstant: {
+    wasmFunctionName: "_MSXgetconstant",
+    inputArgDefs: [{ typeHint: "number" }], // index
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetParameter: {
+    wasmFunctionName: "_MSXgetparameter",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // param
+    ],
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetSource: {
+    wasmFunctionName: "_MSXgetsource",
+    inputArgDefs: [
+      { typeHint: "number" }, // node
+      { typeHint: "number" }, // species
+    ],
+    outputArgDefs: [
+      { name: "type",  type: "int"    }, // source type code
+      { name: "level", type: "double" }, // baseline concentration
+      { name: "pat",   type: "int"    }, // pattern index
+    ],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetPatternLen: {
+    wasmFunctionName: "_MSXgetpatternlen",
+    inputArgDefs: [{ typeHint: "number" }], // pat
+    outputArgDefs: [{ name: "len", type: "int" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetPatternValue: {
+    wasmFunctionName: "_MSXgetpatternvalue",
+    inputArgDefs: [
+      { typeHint: "number" }, // pat
+      { typeHint: "number" }, // period
+    ],
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetInitQual: {
+    wasmFunctionName: "_MSXgetinitqual",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // species
+    ],
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxGetQual: {
+    wasmFunctionName: "_MSXgetqual",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // species
+    ],
+    outputArgDefs: [{ name: "value", type: "double" }],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetConstant: {
+    wasmFunctionName: "_MSXsetconstant",
+    inputArgDefs: [
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // value
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetParameter: {
+    wasmFunctionName: "_MSXsetparameter",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // param
+      { typeHint: "number" }, // value
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetInitQual: {
+    wasmFunctionName: "_MSXsetinitqual",
+    inputArgDefs: [
+      { typeHint: "enum" },   // type (MSX_NODE or MSX_LINK)
+      { typeHint: "number" }, // index
+      { typeHint: "number" }, // species
+      { typeHint: "number" }, // value
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetSource: {
+    wasmFunctionName: "_MSXsetsource",
+    inputArgDefs: [
+      { typeHint: "number" }, // node
+      { typeHint: "number" }, // species
+      { typeHint: "enum" },   // type (MSX_NOSOURCE, MSX_CONCEN, etc.)
+      { typeHint: "number" }, // level
+      { typeHint: "number" }, // pat
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetPatternValue: {
+    wasmFunctionName: "_MSXsetpatternvalue",
+    inputArgDefs: [
+      { typeHint: "number" }, // pat
+      { typeHint: "number" }, // period
+      { typeHint: "number" }, // value
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxSetPattern: {
+    wasmFunctionName: "_MSXsetpattern",
+    inputArgDefs: [
+      { typeHint: "number" },   // pat
+      { typeHint: "double[]" }, // mult (multiplier array)
+      { typeHint: "length" },   // len (auto-calculated from mult)
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
+  msxAddPattern: {
+    wasmFunctionName: "_MSXaddpattern",
+    inputArgDefs: [
+      { typeHint: "string", isStringPtr: true }, // id
+    ],
+    outputArgDefs: [],
+    msxRequired: true,
+    prependProjectHandle: false,
+  },
+
   // ... Define ALL other EPANET functions ...
 };
