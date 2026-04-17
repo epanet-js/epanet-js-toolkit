@@ -33,6 +33,8 @@ import {
   RuleStatus,
   CurveType,
   TimestepEvent,
+  MsxChemicalSpeciesSourceType,
+  MsxChemicalSpeciesType,
 } from "../enum";
 import { apiDefinitions } from "../apiDefinitions";
 
@@ -430,23 +432,29 @@ class Project {
   msxReport!: () => void;
   msxClose!: () => void;
   msxGetIndex!: (type: number, id: string) => number;
-  msxGetIdLen!: (type: number, id: string) => number;
+  msxGetIdLen!: (type: number, id: number) => number;
   msxGetCount!: (type: number) => number;
-  msxGetSpecies!: (index: number) => { type: number; units: string; aTol: number; rTol: number; };
-  msxGetConstant!: (index: number) => number;
+  
+  msxGetSpecies!: (index: number) => { type: MsxChemicalSpeciesType; units: string; aTol: number; rTol: number; };
+  
   msxGetParameter!: (type: number, index: number, param: number) => number;
-  msxGetSource!: (node: number, species: number) => { type: number; level: number; pat: number; };
-  msxGetPatternLen!: (pat: number) => number;
-  msxGetPatternValue!: (pat: number, period: number) => number;
+  msxSetParameter!: (type: number, index: number, param: number, value: number) => void;
+  
   msxGetInitQual!: (type: number, index: number, species: number) => number;
   msxGetQual!: (type: number, index: number, species: number) => number;
-  msxSetConstant!: (index: number, value: number) => void;
-  msxSetParameter!: (type: number, index: number, param: number, value: number) => void;
   msxSetInitQual!: (type: number, index: number, species: number, value: number) => void;
-  msxSetSource!: (node: number, species: number, type: number, level: number, pat: number) => void;
+  
+  msxSetConstant!: (index: number, value: number) => void;
+  msxGetConstant!: (index: number) => number;
+  
+  msxGetSource!: (node: number, species: number) => { type: MsxChemicalSpeciesSourceType; level: number; pat: number; };
+  msxSetSource!: (node: number, species: number, type: MsxChemicalSpeciesSourceType, level: number, pat: number) => void;
+  
+  msxAddPattern!: (id: string) => void;
   msxSetPatternValue!: (pat: number, period: number, value: number) => void;
   msxSetPattern!: (pat: number, mult: number[]) => void;
-  msxAddPattern!: (id: string) => void;
+  msxGetPatternLen!: (pat: number) => number;
+  msxGetPatternValue!: (pat: number, period: number) => number;
 
   // Complex Functions
   getCurve(index: number): {
