@@ -520,6 +520,68 @@ class Project {
     }
   }
 
+  getLinkValues(property: LinkProperty): number[] {
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+
+    if (this._epanetVersionInt < 20300) {
+      throw new Error(
+        `Method getLinkValues requires EPANET v2.3.0, loaded is v${this._formatVersionInt(this._epanetVersionInt)}.`,
+      );
+    }
+
+    const linkCount = this.getCount(CountType.LinkCount);
+    const valuesPtr = this._EN._malloc(linkCount * 8);
+
+    try {
+      const errorCode = this._EN._EN_getlinkvalues(
+        this._projectHandle,
+        property,
+        valuesPtr,
+      );
+      this._checkError(errorCode);
+
+      const buffer = new Float64Array(this._EN.HEAPF64.buffer, valuesPtr, linkCount);
+      return [...buffer];
+    } finally {
+      this._EN._free(valuesPtr);
+    }
+  }
+
+  getNodeValues(property: NodeProperty): number[] {
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+
+    if (this._epanetVersionInt < 20300) {
+      throw new Error(
+        `Method getNodeValues requires EPANET v2.3.0, loaded is v${this._formatVersionInt(this._epanetVersionInt)}.`,
+      );
+    }
+
+    const nodeCount = this.getCount(CountType.NodeCount);
+    const valuesPtr = this._EN._malloc(nodeCount * 8);
+
+    try {
+      const errorCode = this._EN._EN_getnodevalues(
+        this._projectHandle,
+        property,
+        valuesPtr,
+      );
+      this._checkError(errorCode);
+
+      const buffer = new Float64Array(this._EN.HEAPF64.buffer, valuesPtr, nodeCount);
+      return [...buffer];
+    } finally {
+      this._EN._free(valuesPtr);
+    }
+  }
+
   msxGetId(type: number, index: number): string {
     if (!this._EN) {
       throw new Error(
@@ -1017,9 +1079,7 @@ class Project {
       );
     }
 
-    typedArray.forEach((value, i) => {
-      EN.setValue(dataPtr + i*typedArray.BYTES_PER_ELEMENT, value, 'double');
-    })
+    EN.HEAPF64.set(typedArray, dataPtr / typedArray.BYTES_PER_ELEMENT);
 
     return dataPtr;
   }

@@ -102,6 +102,10 @@ indexLines.push(` * Emscripten runtime utilities always present on the loaded mo
 indexLines.push(` */`);
 indexLines.push(`export interface EpanetEngineRuntime {`);
 indexLines.push(`  FS: any`);
+indexLines.push(`  HEAPF64: Float64Array`);
+indexLines.push(`  HEAPF32: Float32Array`);
+indexLines.push(`  HEAP32: Int32Array`);
+indexLines.push(`  HEAPU32: Uint32Array`);
 indexLines.push(`  UTF8ToString(ptr: number, maxBytesToRead?: number): string`);
 indexLines.push(`  stringToUTF8(str: string, outPtr: number, maxBytesToWrite: number): void`);
 indexLines.push(`  getValue(ptr: number, type: string): number`);
