@@ -527,6 +527,12 @@ class Project {
       );
     }
 
+    if (this._epanetVersionInt < 20300) {
+      throw new Error(
+        `Method getLinkValues requires EPANET v2.3.0, loaded is v${this._formatVersionInt(this._epanetVersionInt)}.`,
+      );
+    }
+
     const linkCount = this.getCount(CountType.LinkCount);
     const valuesPtr = this._EN._malloc(linkCount * 8);
 
