@@ -544,11 +544,8 @@ class Project {
       );
       this._checkError(errorCode);
 
-      const values = new Array(linkCount);
-      for (let i = 0; i < linkCount; i++) {
-        values[i] = this._EN.getValue(valuesPtr + i * 8, "double");
-      }
-      return values;
+      const buffer = new Float64Array(this._EN.HEAPF64.buffer, valuesPtr, linkCount);
+      return [...buffer];
     } finally {
       this._EN._free(valuesPtr);
     }
@@ -578,11 +575,8 @@ class Project {
       );
       this._checkError(errorCode);
 
-      const values = new Array(nodeCount);
-      for (let i = 0; i < nodeCount; i++) {
-        values[i] = this._EN.getValue(valuesPtr + i * 8, "double");
-      }
-      return values;
+      const buffer = new Float64Array(this._EN.HEAPF64.buffer, valuesPtr, nodeCount);
+      return [...buffer];
     } finally {
       this._EN._free(valuesPtr);
     }
