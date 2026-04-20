@@ -554,6 +554,40 @@ class Project {
     }
   }
 
+  getNodeValues(property: NodeProperty): number[] {
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+
+    if (this._epanetVersionInt < 20300) {
+      throw new Error(
+        `Method getNodeValues requires EPANET v2.3.0, loaded is v${this._formatVersionInt(this._epanetVersionInt)}.`,
+      );
+    }
+
+    const nodeCount = this.getCount(CountType.NodeCount);
+    const valuesPtr = this._EN._malloc(nodeCount * 8);
+
+    try {
+      const errorCode = this._EN._EN_getnodevalues(
+        this._projectHandle,
+        property,
+        valuesPtr,
+      );
+      this._checkError(errorCode);
+
+      const values = new Array(nodeCount);
+      for (let i = 0; i < nodeCount; i++) {
+        values[i] = this._EN.getValue(valuesPtr + i * 8, "double");
+      }
+      return values;
+    } finally {
+      this._EN._free(valuesPtr);
+    }
+  }
+
   msxGetId(type: number, index: number): string {
     if (!this._EN) {
       throw new Error(
