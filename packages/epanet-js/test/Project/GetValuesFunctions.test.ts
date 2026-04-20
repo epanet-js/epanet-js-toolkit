@@ -46,6 +46,15 @@ describe("getLinkValues", () => {
 
     expect(f).toThrow("Method getLinkValues requires EPANET v2.3.0, loaded is v2.2.0.");
   });
+
+  test("should fail when EPANET is not loaded", async () => {
+    const emptyWs = new SlimWorkspace();
+    const model = new Project(emptyWs);
+
+    const f = () => model.getLinkValues(LinkProperty.Length);
+
+    expect(f).toThrow("EPANET engine not loaded. Call loadModule() on the Workspace first.");
+  });
 });
 
 describe("getNodeValues", () => {
@@ -82,6 +91,15 @@ describe("getNodeValues", () => {
     const f = () => model.getNodeValues(NodeProperty.Demand);
 
     expect(f).toThrow("Method getNodeValues requires EPANET v2.3.0, loaded is v2.2.0.");
+  });
+
+  test("should fail when EPANET is not loaded", async () => {
+    const emptyWs = new SlimWorkspace();
+    const model = new Project(emptyWs);
+
+    const f = () => model.getNodeValues(NodeProperty.Demand);
+
+    expect(f).toThrow("EPANET engine not loaded. Call loadModule() on the Workspace first.");
   });
 });
 
