@@ -520,6 +520,34 @@ class Project {
     }
   }
 
+  getLinkValues(property: LinkProperty): number[] {
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+
+    const linkCount = this.getCount(CountType.LinkCount);
+    const valuesPtr = this._EN._malloc(linkCount * 8);
+
+    try {
+      const errorCode = this._EN._EN_getlinkvalues(
+        this._projectHandle,
+        property,
+        valuesPtr,
+      );
+      this._checkError(errorCode);
+
+      const values = new Array(linkCount);
+      for (let i = 0; i < linkCount; i++) {
+        values[i] = this._EN.getValue(valuesPtr + i * 8, "double");
+      }
+      return values;
+    } finally {
+      this._EN._free(valuesPtr);
+    }
+  }
+
   msxGetId(type: number, index: number): string {
     if (!this._EN) {
       throw new Error(
