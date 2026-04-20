@@ -1079,9 +1079,7 @@ class Project {
       );
     }
 
-    typedArray.forEach((value, i) => {
-      EN.setValue(dataPtr + i*typedArray.BYTES_PER_ELEMENT, value, 'double');
-    })
+    EN.HEAPF64.set(typedArray, dataPtr / typedArray.BYTES_PER_ELEMENT);
 
     return dataPtr;
   }
