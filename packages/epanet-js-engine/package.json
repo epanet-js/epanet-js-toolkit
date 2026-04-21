@@ -10,7 +10,7 @@
     ],
     "scripts": {
         "build:image": "./scripts/build-docker-image.sh",
-        "build:docker": "docker run --rm -v ./dist:/opt/epanet/dist epanet-js-engine npm run build:local",
+        "build:docker": "docker run --rm -v \"$PWD\"/dist:/opt/epanet/dist epanet-js-engine npm run build:local",
         "build:local": "./scripts/build.sh && rollup -c",
         "build": "npm run build:image && npm run build:docker",
         "test": "vitest run",
