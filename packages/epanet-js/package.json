@@ -1,6 +1,6 @@
 {
   "name": "epanet-js",
-  "version": "0.9.0-alpha.2",
+  "version": "0.9.0-alpha.3",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.cjs",
@@ -109,6 +109,12 @@
       "import": "./dist/engines/dev-msx/index.mjs",
       "require": "./dist/engines/dev-msx/index.cjs",
       "types": "./dist/src/engines/dev-msx/index.d.ts"
+    }
+  },
+    "typesVersions": {
+    "*": {
+      "slim": ["dist/src/slim/index.d.ts"],
+      "engines/*": ["dist/src/engines/*/index.d.ts"]
     }
   },
   "repository": {
