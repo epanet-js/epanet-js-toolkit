@@ -2,10 +2,13 @@
   "private": true,
   "name": "epanet-js-monorepo",
   "scripts": {
-    "build": "pnpm -r build",
-    "build:engine": "pnpm --filter @model-create/epanet-engine build",
+    "build:engine": "pnpm --filter @epanet-js/epanet-engine build",
     "build:js": "pnpm --filter epanet-js build",
-    "test": "pnpm --filter epanet-js test",
+    "build": "pnpm run build:engine && pnpm run build:js",
+    "test:engine": "pnpm --filter @epanet-js/epanet-engine test",
+    "test:js": "pnpm --filter epanet-js test",
+    "test": "pnpm run test:engine && pnpm run test:js",
+    "typecheck": "pnpm --filter epanet-js typecheck",
     "test:coverage-ci": "pnpm --filter epanet-js test:coverage-ci"
   },
   "license": "MIT"
