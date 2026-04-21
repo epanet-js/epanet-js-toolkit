@@ -1,6 +1,6 @@
 {
   "name": "epanet-js",
-  "version": "0.9.0",
+  "version": "0.9.0-alpha.2",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.cjs",
