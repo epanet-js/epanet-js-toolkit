@@ -28,24 +28,6 @@ export default defineConfig({
       entry: {
         index: resolve(__dirname, "src/index.ts"),
         "slim/index": resolve(__dirname, "src/slim/index.ts"),
-        "engines/v2.2/index": resolve(__dirname, "src/engines/v2.2/index.ts"),
-        "engines/v2.2-msx/index": resolve(__dirname, "src/engines/v2.2-msx/index.ts"),
-        "engines/v2.3/index": resolve(__dirname, "src/engines/v2.3/index.ts"),
-        "engines/v2.3-msx/index": resolve(__dirname, "src/engines/v2.3-msx/index.ts"),
-        "engines/v2.3.1/index": resolve(__dirname, "src/engines/v2.3.1/index.ts"),
-        "engines/v2.3.1-msx/index": resolve(__dirname, "src/engines/v2.3.1-msx/index.ts"),
-        "engines/v2.3.2/index": resolve(__dirname, "src/engines/v2.3.2/index.ts"),
-        "engines/v2.3.2-msx/index": resolve(__dirname, "src/engines/v2.3.2-msx/index.ts"),
-        "engines/v2.3.3/index": resolve(__dirname, "src/engines/v2.3.3/index.ts"),
-        "engines/v2.3.3-msx/index": resolve(__dirname, "src/engines/v2.3.3-msx/index.ts"),
-        "engines/v2.3.4/index": resolve(__dirname, "src/engines/v2.3.4/index.ts"),
-        "engines/v2.3.4-msx/index": resolve(__dirname, "src/engines/v2.3.4-msx/index.ts"),
-        "engines/v2.3.5/index": resolve(__dirname, "src/engines/v2.3.5/index.ts"),
-        "engines/v2.3.5-msx/index": resolve(__dirname, "src/engines/v2.3.5-msx/index.ts"),
-        "engines/master/index": resolve(__dirname, "src/engines/master/index.ts"),
-        "engines/master-msx/index": resolve(__dirname, "src/engines/master-msx/index.ts"),
-        "engines/dev/index": resolve(__dirname, "src/engines/dev/index.ts"),
-        "engines/dev-msx/index": resolve(__dirname, "src/engines/dev-msx/index.ts"),
       },
       formats: ["es", "cjs"],
       fileName: (format, entryName) =>
@@ -70,6 +52,37 @@ export default defineConfig({
         }
       },
       closeBundle() {
+        // Copy pre-built engine JS files from epanet-js-engine and generate thin
+        // named-export wrappers. This avoids vite inlining WASM as base64, which
+        // it does when it sees `new URL("EpanetEngine.wasm", import.meta.url)` in
+        // the emscripten output during a lib-mode build.
+        for (const version of ENGINE_VERSIONS) {
+          const engineSrcDir = resolve(
+            __dirname,
+            `node_modules/@epanet-js/epanet-engine/dist/${version}`
+          );
+          const destDir = resolve(__dirname, `dist/engines/${version}`);
+          mkdirSync(destDir, { recursive: true });
+
+          // Copy the pre-built engine code as private files (_engine.*).
+          // The engine uses import.meta.url / __dirname to locate EpanetEngine.wasm
+          // relative to itself, so it must live in the same directory as the WASM.
+          copyFileSync(resolve(engineSrcDir, "index.mjs"), resolve(destDir, "_engine.mjs"));
+          copyFileSync(resolve(engineSrcDir, "index.cjs"), resolve(destDir, "_engine.cjs"));
+
+          // Thin ESM wrapper — re-exports the engine's default as named EpanetEngine.
+          writeFileSync(
+            resolve(destDir, "index.mjs"),
+            `export { default as EpanetEngine } from './_engine.mjs';\n`
+          );
+
+          // Thin CJS wrapper.
+          writeFileSync(
+            resolve(destDir, "index.cjs"),
+            `'use strict';\nconst e = require('./_engine.cjs');\nmodule.exports = { EpanetEngine: e.default !== undefined ? e.default : e };\n`
+          );
+        }
+
         // vite-plugin-dts generates dist/src/engines/[version]/index.d.ts as a
         // shallow re-export from @epanet-js/epanet-engine. Replace each one with
         // a self-contained declaration by copying the engine's types locally.
