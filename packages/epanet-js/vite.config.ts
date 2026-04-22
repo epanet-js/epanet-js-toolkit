@@ -70,16 +70,48 @@ export default defineConfig({
           copyFileSync(resolve(engineSrcDir, "index.mjs"), resolve(destDir, "_engine.mjs"));
           copyFileSync(resolve(engineSrcDir, "index.cjs"), resolve(destDir, "_engine.cjs"));
 
-          // Thin ESM wrapper — re-exports the engine's default as named EpanetEngine.
+          // ESM wrapper: declare the WASM URL at module top level so that both
+          // Vite and webpack can statically detect the asset and copy it to
+          // their output directory.  The URL is forwarded via locateFile so the
+          // engine never has to re-derive it from import.meta.url inside the
+          // bundled (and potentially rebased) _engine.mjs.
           writeFileSync(
             resolve(destDir, "index.mjs"),
-            `export { default as EpanetEngine } from './_engine.mjs';\n`
+            [
+              "import _EpanetEngine from './_engine.mjs';",
+              "const _wasmUrl = new URL('./EpanetEngine.wasm', import.meta.url);",
+              "export function EpanetEngine(opts) {",
+              "  const { locateFile: _locateFile, ...rest } = opts || {};",
+              "  return _EpanetEngine({",
+              "    locateFile: _locateFile || (path => path === 'EpanetEngine.wasm' ? _wasmUrl.toString() : path),",
+              "    ...rest",
+              "  });",
+              "}",
+              "export default EpanetEngine;",
+              "",
+            ].join("\n")
           );
 
-          // Thin CJS wrapper.
+          // CJS wrapper: use __dirname + path.join for Node.js / SSR environments.
           writeFileSync(
             resolve(destDir, "index.cjs"),
-            `'use strict';\nconst e = require('./_engine.cjs');\nmodule.exports = { EpanetEngine: e.default !== undefined ? e.default : e };\n`
+            [
+              "'use strict';",
+              "const _path = require('path');",
+              "const e = require('./_engine.cjs');",
+              "const _EpanetEngine = e.default !== undefined ? e.default : e;",
+              "const _wasmPath = _path.join(__dirname, 'EpanetEngine.wasm');",
+              "function EpanetEngine(opts) {",
+              "  const { locateFile: _locateFile, ...rest } = opts || {};",
+              "  return _EpanetEngine({",
+              "    locateFile: _locateFile || (p => p === 'EpanetEngine.wasm' ? _wasmPath : p),",
+              "    ...rest",
+              "  });",
+              "}",
+              "module.exports = { EpanetEngine };",
+              "module.exports.default = EpanetEngine;",
+              "",
+            ].join("\n")
           );
         }
 
