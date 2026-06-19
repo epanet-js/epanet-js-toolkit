@@ -33,7 +33,7 @@ const ENGINE_VERSIONS: { [k: string]: number } = {
   'v2.3.4': 20304,
   'v2.3.5': 20305,
   'master': 20305,
-  'dev': 20305,
+  'dev': 20306,
   'v2.2-msx': 20200,
   'v2.3-msx': 20300,
   'v2.3.1-msx': 20301,
@@ -42,7 +42,7 @@ const ENGINE_VERSIONS: { [k: string]: number } = {
   'v2.3.4-msx': 20304,
   'v2.3.5-msx': 20305,
   'master-msx': 20305,
-  'dev-msx': 20305,
+  'dev-msx': 20306,
 };
 
 describe.each(VERSIONS)("EPANET Version %s", (version) => {
@@ -52,17 +52,17 @@ describe.each(VERSIONS)("EPANET Version %s", (version) => {
     await workspace.loadModuleVersion(EpanetEngine);
     expect(workspace.version).toBe(ENGINE_VERSIONS[version]);
   });
-  
+
   test("Returns an error", () => {
     expect(workspace.getError(201)).toBe("Error 201: syntax error");
   });
-  
+
   test("Read and write a file", () => {
     const multiLine = `Test File
     New Line`;
     workspace.writeFile("test.inp", multiLine);
     const result = workspace.readFile("test.inp");
-  
+
     expect(result).toBe(multiLine);
   });
 });
