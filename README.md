@@ -29,6 +29,10 @@ $ npm install epanet-js
 
 ## Usage
 
+### Full documentation
+
+Find the full documentation in the epanet-js toolkit website: https://toolkit.epanetjs.com/
+
 ### Load and run an existing inp File
 
 [Run this example on CodeSandbox](https://codesandbox.io/embed/musing-chandrasekhar-7tp1y?fontsize=14&hidenavigation=1&module=%2Fsrc%2Findex.js&theme=dark)
