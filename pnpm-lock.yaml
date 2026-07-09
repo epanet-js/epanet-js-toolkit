@@ -8,8 +8,6 @@ importers:
 
   .: {}
 
-  packages/epanet-engine: {}
-
   packages/epanet-js:
     dependencies:
       '@epanet-js/epanet-engine':
