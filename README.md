@@ -59,8 +59,39 @@ model.solveH();
 model.close();
 ```
 
+### Choose a specific EPANET engine version
+
+By default `epanet-js` bundles the latest LTS engine. To pick a specific version, use the slim
+`Workspace`, which ships without an engine, and load one with `loadModuleVersion`.
+
+```js
+import { Workspace } from "epanet-js/slim";
+import { Project } from "epanet-js";
+import { EpanetEngine } from "epanet-js/engines/v2.3.5";
+
+// The slim Workspace has no engine bundled, load the one you imported
+const ws = new Workspace();
+await ws.loadModuleVersion(() => Promise.resolve(EpanetEngine)); // Asynchronous
+
+const model = new Project(ws);
+
+ws.writeFile("net1.inp", inpText);
+model.open("net1.inp", "report.rpt", "out.bin");
+model.solveH();
+model.close();
+
+console.log(ws.version); // The engine version actually loaded
+```
+
+Engines are published as separate entry points, so only the version you import is downloaded:
+
+- `epanet-js/engines/v2.2` through `epanet-js/engines/v2.3.5`
+- `epanet-js/engines/master` and `epanet-js/engines/dev` for development snapshots
+- Add the `-msx` suffix (for example `epanet-js/engines/v2.3.5-msx`) for multi-species support
+
 **_More Examples_**
 
+- [Choosing an engine version](https://toolkit.epanetjs.com/examples/choosing-engine-version/)
 - [Step through the hydraulic simulation](https://toolkit.epanetjs.com/examples/hydraulic-simulation-steps/)
 - [Model builder API](https://toolkit.epanetjs.com/examples/model-builder-api/)
 - [Fire Flow Analysis using React](https://toolkit.epanetjs.com/examples/fire-flow-analysis/)
