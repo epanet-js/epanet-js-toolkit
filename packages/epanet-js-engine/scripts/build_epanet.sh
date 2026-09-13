@@ -25,7 +25,7 @@ for arg in "$@"; do
 done
 
 LSX_REPO="${LSX_REPO:-https://github.com/epanet-js/EPANET-LSX.git}"
-LSX_TAG="${LSX_TAG:-v0.1.0}"
+LSX_TAG="${LSX_TAG:-v0.2.0}"
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
