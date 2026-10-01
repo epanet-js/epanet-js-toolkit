@@ -7,8 +7,7 @@ import {
 
 import type { EpanetEngineAPI } from "@epanet-js/epanet-engine";
 
-import { Workspace } from "../";
-import { Workspace as SlimWorkspace } from "../slim";
+import type { Workspace } from "../Workspace/SlimWorkspace";
 import {
   NodeType,
   NodeProperty,
@@ -44,7 +43,7 @@ interface FinalizerHeldValue {
 }
 
 class Project {
-  _ws: Workspace | SlimWorkspace;
+  _ws: Workspace;
   _EN: EpanetEngineAPI | undefined; // Use the combined type EpanetEngineApi
   private _projectHandle!: number; // Assert definite assignment
   private _epanetVersionInt: number = -1;
@@ -645,7 +644,7 @@ class Project {
     }
   }
 
-  constructor(ws: Workspace | SlimWorkspace) {
+  constructor(ws: Workspace) {
     this._ws = ws;
 
     // Check if module is loaded using the new isLoaded property

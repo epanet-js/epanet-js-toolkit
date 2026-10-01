@@ -36,7 +36,7 @@ export default defineConfig({
     rollupOptions: {},
   },
   plugins: [
-    dts(),
+    dts({ entryRoot: ".", exclude: ["test/**"] }),
     {
       name: "copy-wasm",
       writeBundle(options) {
