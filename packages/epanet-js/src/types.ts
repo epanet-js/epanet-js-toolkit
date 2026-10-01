@@ -1,4 +1,4 @@
-import { EpanetEngine } from "@epanet-js/epanet-engine";
+import type { EpanetEngine } from "@epanet-js/epanet-engine";
 
 // Define memory types more strictly
 export type EpanetMemoryType = "int" | "double" | "char" | "char-title";

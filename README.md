@@ -65,13 +65,12 @@ By default `epanet-js` bundles the latest LTS engine. To pick a specific version
 `Workspace`, which ships without an engine, and load one with `loadModuleVersion`.
 
 ```js
-import { Workspace } from "epanet-js/slim";
-import { Project } from "epanet-js";
+import { Workspace, Project } from "epanet-js/slim";
 import { EpanetEngine } from "epanet-js/engines/v2.3.5";
 
 // The slim Workspace has no engine bundled, load the one you imported
 const ws = new Workspace();
-await ws.loadModuleVersion(() => Promise.resolve(EpanetEngine)); // Asynchronous
+await ws.loadModuleVersion(EpanetEngine); // Asynchronous
 
 const model = new Project(ws);
 

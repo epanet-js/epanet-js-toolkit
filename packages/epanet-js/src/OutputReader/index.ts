@@ -1,4 +1,4 @@
-import { LinkType, NodeType } from '../index';
+import { LinkType, NodeType } from '../enum';
 
 enum NodeResultTypes {
   Demand,

@@ -1,7 +1,7 @@
 import { vi, beforeAll, test, expect } from "vitest";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
-import { Workspace } from "../src/slim";
+import { Workspace, Project, CountType } from "../src/slim";
 
 const VERSIONS = [
   'v2.2',
@@ -64,6 +64,22 @@ describe.each(VERSIONS)("EPANET Version %s", (version) => {
     const result = workspace.readFile("test.inp");
 
     expect(result).toBe(multiLine);
+  });
+});
+
+describe("Slim entry point", () => {
+  test("Runs a simulation with Workspace and Project from epanet-js/slim", async () => {
+    const { EpanetEngine } = await import("../src/engines/v2.3.5");
+    const ws = new Workspace();
+    await ws.loadModuleVersion(EpanetEngine);
+    expect(ws.version).toBe(20305);
+
+    ws.writeFile("net1.inp", readFileSync(`${__dirname}/data/net1.inp`, "utf8"));
+    const model = new Project(ws);
+    model.open("net1.inp", "report.rpt", "out.bin");
+    model.solveH();
+    expect(model.getCount(CountType.NodeCount)).toBe(11);
+    model.close();
   });
 });
 
