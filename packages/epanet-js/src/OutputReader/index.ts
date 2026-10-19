@@ -1,4 +1,11 @@
-import { LinkType, NodeType } from '../enum';
+import {
+  FlowUnits,
+  LinkType,
+  NodeType,
+  PressureUnits,
+  QualityType,
+  StatisticType,
+} from '../enum';
 
 enum NodeResultTypes {
   Demand,
@@ -43,32 +50,52 @@ export interface NodeResults {
 }
 
 export interface EpanetProlog {
+  version: number;
   nodeCount: number;
   resAndTankCount: number;
   linkCount: number;
   pumpCount: number;
   valveCount: number;
+  qualityType: QualityType;
+  tracedNodeIndex: number;
+  flowUnits: FlowUnits;
+  pressureUnits: PressureUnits;
+  statisticType: StatisticType;
+  reportingStartTime: number;
+  reportingTimeStep: number;
+  simulationDuration: number;
+  title: [string, string, string];
+  inputFileName: string;
+  reportFileName: string;
+  chemicalName: string;
+  chemicalUnits: string;
   reportingPeriods: number;
+}
+
+export interface EpanetEpilog {
+  averageBulkReactionRate: number;
+  averageWallReactionRate: number;
+  averageTankReactionRate: number;
+  averageSourceInflowRate: number;
+  reportingPeriods: number;
+  warningFlag: boolean;
 }
 
 export interface EpanetResults {
   prolog: EpanetProlog;
+  epilog: EpanetEpilog;
   results: {
     nodes: NodeResults[];
     links: LinkResults[];
   };
 }
 
+const epilogBytes = 28;
+
 export function readBinary(results: Uint8Array): EpanetResults {
   const view1 = new DataView(results.buffer);
-  const prolog: EpanetProlog = {
-    nodeCount: view1.getInt32(8, true),
-    resAndTankCount: view1.getInt32(12, true),
-    linkCount: view1.getInt32(16, true),
-    pumpCount: view1.getInt32(20, true),
-    valveCount: view1.getInt32(24, true),
-    reportingPeriods: view1.getInt32(results.byteLength - 12, true),
-  };
+  const epilog = getEpilog(results.byteLength - epilogBytes, view1);
+  const prolog = getProlog(view1, epilog.reportingPeriods);
 
   const offsetNodeIds = 884;
   const offsetLinkIds = offsetNodeIds + idBytes * prolog.nodeCount;
@@ -117,6 +144,7 @@ export function readBinary(results: Uint8Array): EpanetResults {
 
   const data: EpanetResults = {
     prolog,
+    epilog,
     results: {
       nodes,
       links,
@@ -124,6 +152,47 @@ export function readBinary(results: Uint8Array): EpanetResults {
   };
   return data;
 }
+
+const getProlog = (
+  dataView: DataView,
+  reportingPeriods: number
+): EpanetProlog => {
+  const text = (offset: number, length: number) =>
+    stringFrom(dataView.buffer.slice(offset, offset + length));
+  return {
+    version: dataView.getInt32(4, true),
+    nodeCount: dataView.getInt32(8, true),
+    resAndTankCount: dataView.getInt32(12, true),
+    linkCount: dataView.getInt32(16, true),
+    pumpCount: dataView.getInt32(20, true),
+    valveCount: dataView.getInt32(24, true),
+    qualityType: dataView.getInt32(28, true),
+    tracedNodeIndex: dataView.getInt32(32, true),
+    flowUnits: dataView.getInt32(36, true),
+    pressureUnits: dataView.getInt32(40, true),
+    statisticType: dataView.getInt32(44, true),
+    reportingStartTime: dataView.getInt32(48, true),
+    reportingTimeStep: dataView.getInt32(52, true),
+    simulationDuration: dataView.getInt32(56, true),
+    title: [text(60, 80), text(140, 80), text(220, 80)],
+    inputFileName: text(300, 260),
+    reportFileName: text(560, 260),
+    chemicalName: text(820, 32),
+    chemicalUnits: text(852, 32),
+    reportingPeriods,
+  };
+};
+
+const getEpilog = (offset: number, dataView: DataView): EpanetEpilog => {
+  return {
+    averageBulkReactionRate: dataView.getFloat32(offset, true),
+    averageWallReactionRate: dataView.getFloat32(offset + 4, true),
+    averageTankReactionRate: dataView.getFloat32(offset + 8, true),
+    averageSourceInflowRate: dataView.getFloat32(offset + 12, true),
+    reportingPeriods: dataView.getInt32(offset + 16, true),
+    warningFlag: dataView.getInt32(offset + 20, true) !== 0,
+  };
+};
 
 const getIds = (
   offset: number,

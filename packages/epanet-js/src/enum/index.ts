@@ -15,6 +15,7 @@ export { default as NodeProperty } from './NodeProperty';
 export { default as NodeType } from './NodeType';
 export { default as ObjectType } from './ObjectType';
 export { default as Option } from './Option';
+export { default as PressureUnits } from './PressureUnits';
 export { default as PumpStateType } from './PumpStateType';
 export { default as PumpType } from './PumpType';
 export { default as QualityType } from './QualityType';
