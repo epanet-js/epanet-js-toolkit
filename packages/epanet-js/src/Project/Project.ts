@@ -7,7 +7,11 @@ import {
 
 import type { EpanetEngineAPI } from "@epanet-js/epanet-engine";
 
-import type { Workspace } from "../Workspace/SlimWorkspace";
+import type {
+  Workspace,
+  ReportCallback,
+  ProgressCallback,
+} from "../Workspace/SlimWorkspace";
 import {
   NodeType,
   NodeProperty,
@@ -40,7 +44,11 @@ import { apiDefinitions } from "../apiDefinitions";
 interface FinalizerHeldValue {
   projectHandle: number;
   enInstance: EpanetEngineAPI;
+  workspace: Workspace;
 }
+
+const METHODS_RESETTING_REPORT_CALLBACK = ["open", "openX", "init"];
+const REPORT_CALLBACK_MIN_VERSION = 20300;
 
 class Project {
   _ws: Workspace;
@@ -48,12 +56,17 @@ class Project {
   private _projectHandle!: number; // Assert definite assignment
   private _epanetVersionInt: number = -1;
   private _hasMsxSupport: boolean = false;
+  private _reportCallback: ReportCallback | null = null;
   private readonly _absoluteMinVersion = 20200;
 
   private static readonly _finalizer =
     new FinalizationRegistry<FinalizerHeldValue>(
       (heldValue: FinalizerHeldValue) => {
-        const { projectHandle, enInstance } = heldValue;
+        const { projectHandle, enInstance, workspace } = heldValue;
+
+        try {
+          workspace._setReportListener(projectHandle, null);
+        } catch (err) {}
 
         if (projectHandle !== 0) {
           const funcName = "_EN_deleteproject";
@@ -178,11 +191,6 @@ class Project {
   ) => void;
   open!: (inputFile: string, reportFile: string, binaryFile: string) => void;
   saveInpFile!: (filename: string) => void;
-  runProject!: (
-    inputFile: string,
-    reportFile: string,
-    outputFile: string,
-  ) => void;
 
   // Reporting Functions
   writeLine!: (line: string) => void;
@@ -433,27 +441,110 @@ class Project {
   msxGetIndex!: (type: number, id: string) => number;
   msxGetIdLen!: (type: number, id: number) => number;
   msxGetCount!: (type: number) => number;
-  
+
   msxGetSpecies!: (index: number) => { type: MsxChemicalSpeciesType; units: string; aTol: number; rTol: number; };
-  
+
   msxGetParameter!: (type: number, index: number, param: number) => number;
   msxSetParameter!: (type: number, index: number, param: number, value: number) => void;
-  
+
   msxGetInitQual!: (type: number, index: number, species: number) => number;
   msxGetQual!: (type: number, index: number, species: number) => number;
   msxSetInitQual!: (type: number, index: number, species: number, value: number) => void;
-  
+
   msxSetConstant!: (index: number, value: number) => void;
   msxGetConstant!: (index: number) => number;
-  
+
   msxGetSource!: (node: number, species: number) => { type: MsxChemicalSpeciesSourceType; level: number; pat: number; };
   msxSetSource!: (node: number, species: number, type: MsxChemicalSpeciesSourceType, level: number, pat: number) => void;
-  
+
   msxAddPattern!: (id: string) => void;
   msxSetPatternValue!: (pat: number, period: number, value: number) => void;
   msxSetPattern!: (pat: number, mult: number[]) => void;
   msxGetPatternLen!: (pat: number) => number;
   msxGetPatternValue!: (pat: number, period: number) => number;
+
+  runProject(
+    inputFile: string,
+    reportFile: string,
+    outputFile: string,
+    onProgress?: ProgressCallback,
+  ): void {
+    const EN = this._ensureInitialized();
+    const inputPtr = EN.allocateUTF8(inputFile);
+    const reportPtr = EN.allocateUTF8(reportFile);
+    const outputPtr = EN.allocateUTF8(outputFile);
+    try {
+      const run = (progressPtr: number) =>
+        EN._EN_runproject(
+          this._projectHandle,
+          inputPtr,
+          reportPtr,
+          outputPtr,
+          progressPtr,
+        );
+      const errorCode = onProgress
+        ? this._ws._withProgressListener(onProgress, () =>
+            run(this._ws._getProgressCallbackPtr()),
+          )
+        : run(0);
+
+      this._applyReportCallback();
+      this._checkError(errorCode);
+    } finally {
+      EN._free(inputPtr);
+      EN._free(reportPtr);
+      EN._free(outputPtr);
+    }
+  }
+
+  setReportCallback(callback: ReportCallback | null): void {
+    this._ensureInitialized();
+    if (this._epanetVersionInt < REPORT_CALLBACK_MIN_VERSION) {
+      throw new Error(
+        `Method 'setReportCallback' requires EPANET v${this._formatVersionInt(
+          REPORT_CALLBACK_MIN_VERSION,
+        )}, loaded is v${this._formatVersionInt(this._epanetVersionInt)}.`,
+      );
+    }
+    this._reportCallback = callback;
+    this._ws._setReportListener(this._projectHandle, callback);
+    if (callback) {
+      this._applyReportCallback();
+    } else {
+      this._clearReportCallbackInEngine();
+    }
+  }
+
+  getReportCallback(): ReportCallback | null {
+    return this._reportCallback;
+  }
+
+  private _applyReportCallback(): void {
+    if (!this._EN || this._reportCallback === null) return;
+    const pointer = this._ws._getReportCallbackPtr();
+    const errorCode = this._EN._EN_setreportcallback(
+      this._projectHandle,
+      pointer,
+    );
+    this._checkError(errorCode);
+  }
+
+  private _clearReportCallbackInEngine(): void {
+    if (!this._EN) return;
+    this._checkError(this._EN._EN_setreportcallback(this._projectHandle, 0));
+  }
+
+  private _ensureInitialized(): EpanetEngineAPI {
+    if (!this._EN && this._ws.isLoaded) {
+      this._initializeProject();
+    }
+    if (!this._EN) {
+      throw new Error(
+        "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+      );
+    }
+    return this._EN;
+  }
 
   // Complex Functions
   getCurve(index: number): {
@@ -670,6 +761,7 @@ class Project {
     Project._finalizer.register(this, {
       projectHandle: this._projectHandle,
       enInstance: this._EN,
+      workspace: this._ws,
     });
   }
 
@@ -821,10 +913,16 @@ class Project {
     for (const methodName in apiDefinitions) {
       if (Object.prototype.hasOwnProperty.call(apiDefinitions, methodName)) {
         const definition = apiDefinitions[methodName];
-        (this as any)[methodName] = this._createApiMethod(
-          definition,
+        const method = this._createApiMethod(definition, methodName);
+        (this as any)[methodName] = METHODS_RESETTING_REPORT_CALLBACK.includes(
           methodName,
-        );
+        )
+          ? (...args: any[]) => {
+              const result = method(...args);
+              this._applyReportCallback();
+              return result;
+            }
+          : method;
       }
     }
   }

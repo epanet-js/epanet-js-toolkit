@@ -115,6 +115,36 @@ describe("Project Functions", async () => {
       expect(rpt.length).toBeGreaterThan(0);
       expect(epanetMagicNumber).toEqual(516114521);
     });
+
+    test("should report progress messages while running a project", () => {
+      ws.writeFile("net1.inp", net1);
+      const messages: string[] = [];
+      model.runProject("net1.inp", "report.rpt", "out.bin", (message) =>
+        messages.push(message),
+      );
+
+      expect(messages.length).toBeGreaterThan(0);
+      expect(messages.some((m) => /Computing hydraulics/.test(m))).toBe(true);
+      expect(messages.some((m) => /Writing output report/.test(m))).toBe(true);
+      expect(ws.readFile("report.rpt").length).toBeGreaterThan(0);
+
+      model.open("net1.inp", "report2.rpt", "out2.bin");
+      expect(model.getCount(CountType.NodeCount)).toEqual(11);
+    });
+
+    test("should keep a report callback attached after runProject", () => {
+      ws.writeFile("net1.inp", net1);
+      const lines: string[] = [];
+      model.setReportCallback((line) => lines.push(line));
+
+      model.runProject("net1.inp", "run.rpt", "run.bin");
+      expect(ws.readFile("run.rpt")).toContain("Analysis begun");
+      expect(lines.some((l) => /Analysis begun/.test(l))).toBe(false);
+
+      model.open("net1.inp", "report2.rpt", "out2.bin");
+      model.writeLine("after runProject");
+      expect(lines).toContain("after runProject");
+    });
   });
 
   describe("Project Comment Operations", () => {

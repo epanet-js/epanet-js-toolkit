@@ -49,6 +49,15 @@ describe("EPANET Version Guarding", () => {
     ).toThrow(/Method 'openX' requires EPANET v2\.3\.0.*loaded is v2\.2\.0/);
   });
 
+  it("should throw when calling setReportCallback with baseline version", async () => {
+    const workspace = new Workspace();
+    await workspace.loadModuleVersion(EpanetEngineV20200);
+    const project = new Project(workspace);
+    expect(() => project.setReportCallback(() => {})).toThrow(
+      /Method 'setReportCallback' requires EPANET v2\.3\.0.*loaded is v2\.2\.0/,
+    );
+  });
+
   it("should ALLOW calling version-specific function with required version", async () => {
     const workspace = new Workspace();
     await workspace.loadModuleVersion(EpanetEngineV20300);
@@ -86,4 +95,3 @@ beforeAll(() => {
     };
   });
 });
-

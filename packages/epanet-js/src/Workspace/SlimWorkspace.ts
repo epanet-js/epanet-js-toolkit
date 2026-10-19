@@ -40,9 +40,31 @@ type EpanetEngine =
   EpanetEngineDevMSX |
   EpanetEngineMasterMSX;
 
+// Emscripten `addFunction` signature strings. 'v' = void, 'i' = int/pointer
+// void (*)(void *userData, void *projectHandle, const char *line)
+const REPORT_CALLBACK_SIGNATURE = "viii";
+// void (*)(char *message)
+const PROGRESS_CALLBACK_SIGNATURE = "vi";
+
+const CALLBACK_SUPPORT_HINT =
+  "The loaded EPANET engine was built without JavaScript callback support " +
+  "(addFunction/removeFunction are missing). Rebuild @epanet-js/epanet-engine.";
+
+export type ReportCallback = (line: string) => void;
+export type ProgressCallback = (message: string) => void;
+
+interface CallbackCapableEngine {
+  addFunction?: (fn: (...args: number[]) => void, signature: string) => number;
+  removeFunction?: (ptr: number) => void;
+}
+
 export class Workspace {
   private _instance: EpanetEngine | undefined;
   private _FS: EpanetEngine["FS"] | undefined;
+  private _reportCallbackPtr: number | undefined;
+  private _reportListeners = new Map<number, ReportCallback>();
+  private _progressCallbackPtr: number | undefined;
+  private _progressListener: ProgressCallback | undefined;
 
   async loadModuleVersion(epanetEngine: () => Promise<EpanetEngine>): Promise<void> {
     const engine = await epanetEngine();
@@ -108,6 +130,69 @@ export class Workspace {
     return this.FS.readFile(file, {
       encoding,
     }) as Uint8Array;
+  }
+
+  get supportsCallbacks(): boolean {
+    const engine = this.instance as unknown as CallbackCapableEngine;
+    return typeof engine.addFunction === "function";
+  }
+
+  private _addFunction(
+    fn: (...args: number[]) => void,
+    signature: string,
+  ): number {
+    const engine = this.instance as unknown as CallbackCapableEngine;
+    if (typeof engine.addFunction !== "function") {
+      throw new Error(CALLBACK_SUPPORT_HINT);
+    }
+    return engine.addFunction(fn, signature);
+  }
+
+  _getReportCallbackPtr(): number {
+    if (this._reportCallbackPtr === undefined) {
+      const engine = this.instance;
+      this._reportCallbackPtr = this._addFunction(
+        (_userData: number, projectHandle: number, linePtr: number) => {
+          const listener = this._reportListeners.get(projectHandle);
+          if (listener) listener(engine.UTF8ToString(linePtr));
+        },
+        REPORT_CALLBACK_SIGNATURE,
+      );
+    }
+    return this._reportCallbackPtr;
+  }
+
+  _setReportListener(
+    projectHandle: number,
+    listener: ReportCallback | null,
+  ): void {
+    if (listener) {
+      this._reportListeners.set(projectHandle, listener);
+    } else {
+      this._reportListeners.delete(projectHandle);
+    }
+  }
+
+  _getProgressCallbackPtr(): number {
+    if (this._progressCallbackPtr === undefined) {
+      const engine = this.instance;
+      this._progressCallbackPtr = this._addFunction((messagePtr: number) => {
+        if (this._progressListener) {
+          this._progressListener(engine.UTF8ToString(messagePtr));
+        }
+      }, PROGRESS_CALLBACK_SIGNATURE);
+    }
+    return this._progressCallbackPtr;
+  }
+
+  _withProgressListener<T>(listener: ProgressCallback, fn: () => T): T {
+    const previous = this._progressListener;
+    this._progressListener = listener;
+    try {
+      return fn();
+    } finally {
+      this._progressListener = previous;
+    }
   }
 }
 

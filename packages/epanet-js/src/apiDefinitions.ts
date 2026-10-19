@@ -434,16 +434,6 @@ export const apiDefinitions: Record<string, ApiFunctionDefinition> = {
     outputArgDefs: [],
   },
 
-  runProject: {
-    wasmFunctionName: "_EN_runproject",
-    inputArgDefs: [
-      { typeHint: "string", isStringPtr: true }, // inputFile
-      { typeHint: "string", isStringPtr: true }, // reportFile
-      { typeHint: "string", isStringPtr: true }, // outputFile
-    ],
-    outputArgDefs: [],
-  },
-
   // Reporting Functions
   writeLine: {
     wasmFunctionName: "_EN_writeline",
