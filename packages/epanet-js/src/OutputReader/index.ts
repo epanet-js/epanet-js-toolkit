@@ -51,23 +51,37 @@ export interface EpanetProlog {
   reportingPeriods: number;
 }
 
+export interface EpanetEpilog {
+  averageBulkReactionRate: number;
+  averageWallReactionRate: number;
+  averageTankReactionRate: number;
+  averageSourceInflowRate: number;
+  reportingPeriods: number;
+  warningFlag: boolean;
+  magicNumber: number;
+}
+
 export interface EpanetResults {
   prolog: EpanetProlog;
+  epilog: EpanetEpilog;
   results: {
     nodes: NodeResults[];
     links: LinkResults[];
   };
 }
 
+const epilogBytes = 28;
+
 export function readBinary(results: Uint8Array): EpanetResults {
   const view1 = new DataView(results.buffer);
+  const epilog = getEpilog(results.byteLength - epilogBytes, view1);
   const prolog: EpanetProlog = {
     nodeCount: view1.getInt32(8, true),
     resAndTankCount: view1.getInt32(12, true),
     linkCount: view1.getInt32(16, true),
     pumpCount: view1.getInt32(20, true),
     valveCount: view1.getInt32(24, true),
-    reportingPeriods: view1.getInt32(results.byteLength - 12, true),
+    reportingPeriods: epilog.reportingPeriods,
   };
 
   const offsetNodeIds = 884;
@@ -117,6 +131,7 @@ export function readBinary(results: Uint8Array): EpanetResults {
 
   const data: EpanetResults = {
     prolog,
+    epilog,
     results: {
       nodes,
       links,
@@ -124,6 +139,18 @@ export function readBinary(results: Uint8Array): EpanetResults {
   };
   return data;
 }
+
+const getEpilog = (offset: number, dataView: DataView): EpanetEpilog => {
+  return {
+    averageBulkReactionRate: dataView.getFloat32(offset, true),
+    averageWallReactionRate: dataView.getFloat32(offset + 4, true),
+    averageTankReactionRate: dataView.getFloat32(offset + 8, true),
+    averageSourceInflowRate: dataView.getFloat32(offset + 12, true),
+    reportingPeriods: dataView.getInt32(offset + 16, true),
+    warningFlag: dataView.getInt32(offset + 20, true) !== 0,
+    magicNumber: dataView.getInt32(offset + 24, true),
+  };
+};
 
 const getIds = (
   offset: number,
