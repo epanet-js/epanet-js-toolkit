@@ -1,5 +1,12 @@
 import { Project, Workspace, readBinary } from "../src";
-import { NodeType, LinkType } from "../src/enum";
+import {
+  FlowUnits,
+  LinkType,
+  NodeType,
+  PressureUnits,
+  QualityType,
+  StatisticType,
+} from "../src/enum";
 
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -36,11 +43,29 @@ describe("OutputReader", () => {
       const results = readBinary(runNet1());
 
       expect(results.prolog).toEqual({
+        version: 20012,
         nodeCount: 11,
         resAndTankCount: 2,
         linkCount: 13,
         pumpCount: 1,
         valveCount: 0,
+        qualityType: QualityType.Chem,
+        tracedNodeIndex: 0,
+        flowUnits: FlowUnits.GPM,
+        pressureUnits: PressureUnits.PSI,
+        statisticType: StatisticType.Series,
+        reportingStartTime: 0,
+        reportingTimeStep: 3600,
+        simulationDuration: 86400,
+        title: [
+          " EPANET Example Network 1",
+          "A simple example of modeling chlorine decay. Both bulk and",
+          "wall reactions are included. ",
+        ],
+        inputFileName: "net1.inp",
+        reportFileName: "",
+        chemicalName: "Chlorine",
+        chemicalUnits: "mg/L",
         reportingPeriods: 25,
       });
     });
