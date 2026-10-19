@@ -16,8 +16,6 @@ const net1 = readFileSync(join(__dirname, "./data/net1.inp"), "utf8");
 const ws = new Workspace();
 await ws.loadModule();
 
-const epanetMagicNumber = 516114521;
-
 describe("OutputReader", () => {
   let model: Project;
 
@@ -96,7 +94,6 @@ describe("OutputReader", () => {
       expect(epilog.reportingPeriods).toEqual(25);
       expect(epilog.reportingPeriods).toEqual(results.prolog.reportingPeriods);
       expect(epilog.warningFlag).toBe(false);
-      expect(epilog.magicNumber).toEqual(epanetMagicNumber);
 
       // Net1 runs a chlorine analysis with first-order bulk and wall decay
       // but defines no [SOURCES], so source inflow is zero.

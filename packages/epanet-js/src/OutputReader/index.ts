@@ -79,7 +79,6 @@ export interface EpanetEpilog {
   averageSourceInflowRate: number;
   reportingPeriods: number;
   warningFlag: boolean;
-  magicNumber: number;
 }
 
 export interface EpanetResults {
@@ -192,7 +191,6 @@ const getEpilog = (offset: number, dataView: DataView): EpanetEpilog => {
     averageSourceInflowRate: dataView.getFloat32(offset + 12, true),
     reportingPeriods: dataView.getInt32(offset + 16, true),
     warningFlag: dataView.getInt32(offset + 20, true) !== 0,
-    magicNumber: dataView.getInt32(offset + 24, true),
   };
 };
 
