@@ -191,3 +191,131 @@ describe("Epanet Reporting Functions", () => {
     });
   });
 });
+
+describe("Report Callback", () => {
+  let ws: Workspace;
+  let model: Project;
+
+  beforeEach(async () => {
+    ws = new Workspace();
+    await ws.loadModule();
+    model = new Project(ws);
+    ws.writeFile("net1.inp", net1);
+  });
+
+  afterEach(() => {
+    model.close();
+  });
+
+  test("workspace reports callback support", () => {
+    expect(ws.supportsCallbacks).toBe(true);
+  });
+
+  test("receives lines written with writeLine instead of the report file", () => {
+    model.open("net1.inp", "cb.rpt", "cb.bin");
+    const lines: string[] = [];
+    model.setReportCallback((line) => lines.push(line));
+
+    model.writeLine("hello from javascript");
+    model.writeLine("second line");
+
+    expect(lines).toEqual(["hello from javascript", "second line"]);
+    expect(model.getReportCallback()).not.toBeNull();
+
+    model.close();
+    expect(ws.readFile("cb.rpt")).not.toContain("hello from javascript");
+  });
+
+  test("receives the full report produced by report()", () => {
+    model.open("net1.inp", "", "");
+    const lines: string[] = [];
+    model.setReportCallback((line) => lines.push(line));
+
+    model.setReport("NODES ALL");
+    model.solveH();
+    model.solveQ();
+    model.report();
+
+    expect(lines.length).toBeGreaterThan(10);
+    expect(lines.some((l) => /Analysis begun/.test(l))).toBe(true);
+    expect(lines.some((l) => /Node Results/.test(l))).toBe(true);
+  });
+
+  test("stays attached when set before open() and across close()/open()", () => {
+    const lines: string[] = [];
+    model.setReportCallback((line) => lines.push(line));
+
+    model.open("net1.inp", "cb2.rpt", "cb2.bin");
+    model.writeLine("after open");
+    model.close();
+    model.open("net1.inp", "cb2.rpt", "cb2.bin");
+    model.writeLine("after reopen");
+
+    expect(lines).toEqual(["after open", "after reopen"]);
+  });
+
+  test("stays attached across init()", () => {
+    const lines: string[] = [];
+    model.setReportCallback((line) => lines.push(line));
+    model.init("cb3.rpt", "cb3.bin", 0, 0);
+    model.writeLine("after init");
+
+    expect(lines.some((l) => /E P A N E T/.test(l))).toBe(true);
+    expect(lines[lines.length - 1]).toEqual("after init");
+  });
+
+  test("a second call replaces the previous callback", () => {
+    model.open("net1.inp", "cb4.rpt", "cb4.bin");
+    const first: string[] = [];
+    const second: string[] = [];
+    model.setReportCallback((line) => first.push(line));
+    model.setReportCallback((line) => second.push(line));
+
+    model.writeLine("only the second sees this");
+
+    expect(first).toEqual([]);
+    expect(second).toEqual(["only the second sees this"]);
+  });
+
+  test("null clears the callback and restores report-file output", () => {
+    model.open("net1.inp", "cb5.rpt", "cb5.bin");
+    const lines: string[] = [];
+    model.setReportCallback((line) => lines.push(line));
+    model.writeLine("to callback");
+
+    model.setReportCallback(null);
+    model.writeLine("to file");
+    expect(model.getReportCallback()).toBeNull();
+
+    model.close();
+    expect(lines).toEqual(["to callback"]);
+    expect(ws.readFile("cb5.rpt")).toContain("to file");
+  });
+
+  test("projects sharing a workspace do not receive each other's lines", () => {
+    const other = new Project(ws);
+    model.open("net1.inp", "a.rpt", "a.bin");
+    other.open("net1.inp", "b.rpt", "b.bin");
+    const a: string[] = [];
+    const b: string[] = [];
+    model.setReportCallback((line) => a.push(line));
+    other.setReportCallback((line) => b.push(line));
+
+    model.writeLine("to A");
+    other.writeLine("to B");
+    model.writeLine("to A again");
+
+    expect(a).toEqual(["to A", "to A again"]);
+    expect(b).toEqual(["to B"]);
+    other.close();
+  });
+
+  test("an exception thrown by the callback propagates to the caller", () => {
+    model.open("net1.inp", "", "");
+    model.setReportCallback(() => {
+      throw new Error("boom from callback");
+    });
+    expect(() => model.writeLine("x")).toThrow("boom from callback");
+    model.setReportCallback(null);
+  });
+});
