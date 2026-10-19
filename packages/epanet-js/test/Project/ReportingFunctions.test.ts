@@ -318,4 +318,36 @@ describe("Report Callback", () => {
     expect(() => model.writeLine("x")).toThrow("boom from callback");
     model.setReportCallback(null);
   });
+
+  test("initializes lazily when the workspace is loaded after the project", async () => {
+    const lateWs = new Workspace();
+    const lateModel = new Project(lateWs);
+    await lateWs.loadModule();
+    lateWs.writeFile("net1.inp", net1);
+    const lines: string[] = [];
+
+    lateModel.setReportCallback((line) => lines.push(line));
+    lateModel.open("net1.inp", "", "");
+    lateModel.writeLine("after late load");
+
+    expect(lines).toEqual(["after late load"]);
+    lateModel.close();
+  });
+
+  test("throws when the workspace engine is not loaded", () => {
+    const unloaded = new Project(new Workspace());
+    expect(() => unloaded.setReportCallback(() => {})).toThrow(
+      "EPANET engine not loaded. Call loadModule() on the Workspace first.",
+    );
+  });
+
+  test("throws a rebuild hint when the engine lacks addFunction", () => {
+    // @ts-expect-error
+    delete ws.instance.addFunction;
+
+    expect(ws.supportsCallbacks).toBe(false);
+    expect(() => model.setReportCallback(() => {})).toThrow(
+      /built without JavaScript callback support/,
+    );
+  });
 });
